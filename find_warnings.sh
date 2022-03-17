@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash  
 gcc -Wall $1 -o test 2> warning.txt
 a=$?
 grep warning:  warning.txt | sed 's/warning: //'  > result.txt
