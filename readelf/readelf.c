@@ -43,6 +43,10 @@ int is_elf_format(u_char *binary)
 /*
 	 Exercise 1.2. Please complete func "readelf". 
  */
+#define REVERSE32(n_n)\
+	(((n_n&0xff)<<24)|((n_n&0xff00)<<4)|((n_n&0xff0000)>>4)|((n_n&0xff000000)>>24))
+#define REVERSE16(n_n)\
+	((n_n&0xff)<<4)|(((n_n)&0xff00)>>4)
 int readelf(u_char *binary, int size)
 {
 	Elf32_Ehdr *ehdr = (Elf32_Ehdr *)binary;
@@ -71,7 +75,7 @@ int readelf(u_char *binary, int size)
 	// hint: section number starts at 0.
 	for(Nr=0;Nr<sh_entry_count;Nr++){
 		shdr=(Elf32_Shdr *)(ptr_sh_table+Nr*sh_entry_size);
-		printf("Read:%d:0x%x,0x%x\n",Nr,shdr->sh_offset,shdr->sh_addr);
+		printf("Read : %d:0x%x,0x%x\n",Nr,shdr->sh_offset,shdr->sh_addr);
 	}
 
 	return 0;
