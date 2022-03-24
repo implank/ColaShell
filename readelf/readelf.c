@@ -70,16 +70,16 @@ int readelf(u_char *binary, int size)
 	// for each section header, output section number and section addr. 
 	// hint: section number starts at 0.
 	phdr=(Elf32_Phdr *)ptr_ph_table;
-	int f=-1;int ans1=0x7fffffff;
+	int f=-1;unsigned int ans1=0x7fffffff;
 	for(Nr=0;Nr<ph_entry_count;Nr++){
 		Elf32_Phdr *p1=phdr+Nr;
-		int l1=p1->p_vaddr;
-		int r1=l1+p1->p_memsz;
+		unsigned int l1=p1->p_vaddr;
+		unsigned int r1=l1+p1->p_memsz;
 		for(int j=0;j<ph_entry_count;++j)if(j!=Nr){
 			Elf32_Phdr *p2 = phdr+j;
-			int l2=p2->p_vaddr;
+			unsigned int l2=p2->p_vaddr;
 			unsigned int r2=l2+p2->p_memsz;
-			int round1=r1>>12,round2=l2>>12;
+			unsigned int round1=r1>>12,round2=l2>>12;
 			if(round1==round2){
 				if(r1<=l2){
 			//		printf("Overlay at page va : 0x%x\n",l1);
