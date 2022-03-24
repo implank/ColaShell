@@ -89,6 +89,7 @@ int readelf(u_char *binary, int size)
 				return 0;
 			}
 		}
+		phdr++;
 	}
 
 	phdr=(Elf32_Phdr *)ptr_ph_table;
