@@ -71,11 +71,11 @@ int readelf(u_char *binary, int size)
 	// hint: section number starts at 0.
 	phdr=(Elf32_Phdr *)ptr_ph_table;
 	int f=-1;unsigned ans1=0xffffffff;
-	for(Nr=0;Nr+1<ph_entry_count;Nr++){
+	for(Nr=0;Nr<ph_entry_count;Nr++){
 		Elf32_Phdr *p1=phdr+Nr;
 		int l1=p1->p_vaddr;
 		int r1=l1+p1->p_memsz;
-		for(int j=Nr+1;j<ph_entry_count;++j){
+		for(int j=0;j<ph_entry_count;++j)if(j!=Nr){
 			Elf32_Phdr *p2 = phdr+j;
 			int l2=p2->p_vaddr;
 			int r2=l2+p2->p_memsz;
