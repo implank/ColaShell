@@ -70,35 +70,49 @@ int readelf(u_char *binary, int size)
 	// for each section header, output section number and section addr. 
 	// hint: section number starts at 0.
 	phdr=(Elf32_Phdr *)ptr_ph_table;
+	int f=-1;unsigned ans1=0xffffffff;
 	for(Nr=0;Nr+1<ph_entry_count;Nr++){
-		int l1=phdr->p_vaddr;
-		int r1=l1+phdr->p_memsz;
-		Elf32_Phdr *nphdr = phdr+1;
-		int l2=nphdr->p_vaddr;
-		int r2=l2+nphdr->p_memsz;
-		int round1=r1>>12,round2=l2>>12;
-		if(round1==round2){
-			if(r1<=l2){
-				printf("Overlay at page va : 0x%x\n",l1);
-		//		printf("0x%x 0x%x 0x%x\n",r1,l2,r2);
-				return 0;
+		Elf32_Phdr *p1=phdr+Nr;
+		int l1=p1->p_vaddr;
+		int r1=l1+p1->p_memsz;
+		for(int j=Nr+1;j<ph_entry_count;++j){
+			Elf32_Phdr *p2 = phdr+j;
+			int l2=p2->p_vaddr;
+			int r2=l2+p2->p_memsz;
+			int round1=r1>>12,round2=l2>>12;
+			if(round1==round2){
+				if(r1<=l2){
+			//		printf("Overlay at page va : 0x%x\n",l1);
+			//		printf("0x%x 0x%x 0x%x\n",r1,l2,r2);
+			//		return 0;
+					f=0;
+					if(l1<ans1)
+							ans1=l1;
+					
+				}
+				else {
+				//	printf("Conflict at page va : 0x%x\n",l1);
+			//		printf("0x%x 0x%x 0x%x\n",r1,l2,r2);
+			//		return 0;
+					f=1;
+					if(l1<ans1)
+							ans1=l1;
+				}
 			}
-			else {
-				printf("Conflict at page va : 0x%x\n",l1);
-		//		printf("0x%x 0x%x 0x%x\n",r1,l2,r2);
-				return 0;
-			}
-		}
-		phdr++;
+		}	
 	}
-
+	if(f==0)
+		printf("Conflict at page va : 0x%x\n",ans1);
+	else if(f==1)	
+		printf("Overlay at page va : 0x%x\n",ans1);
+	else {
 	phdr=(Elf32_Phdr *)ptr_ph_table;
 	for(Nr=0;Nr<ph_entry_count;Nr++){
 		//phdr=(Elf32_Phdr *)(ptr_ph_table+Nr*ph_entry_size);
 		printf("%d:0x%x,0x%x\n",Nr,phdr->p_filesz,phdr->p_memsz);
 		phdr++;
 	}
-
+	}
 	return 0;
 }
 
