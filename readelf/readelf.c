@@ -78,7 +78,7 @@ int readelf(u_char *binary, int size)
 		int r2=l2+nphdr->p_memsz;
 		int round1=r1>>12,round2=l2>>12;
 		if(round1==round2){
-			if(l2<=r1){
+			if(r1<=l2){
 				printf("Overlay at page va : 0x%x\n",l1);
 		//		printf("0x%x 0x%x 0x%x\n",r1,l2,r2);
 				return 0;
