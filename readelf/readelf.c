@@ -70,7 +70,7 @@ int readelf(u_char *binary, int size)
 	// for each section header, output section number and section addr. 
 	// hint: section number starts at 0.
 	phdr=(Elf32_Phdr *)ptr_ph_table;
-	int f=-1;int ans1=0xffffff;
+	int f=-1;int ans1=0x7fffffff;
 	for(Nr=0;Nr<ph_entry_count;Nr++){
 		Elf32_Phdr *p1=phdr+Nr;
 		int l1=p1->p_vaddr;
