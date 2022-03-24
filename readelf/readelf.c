@@ -85,7 +85,7 @@ int readelf(u_char *binary, int size)
 			//		printf("Overlay at page va : 0x%x\n",l1);
 			//		printf("0x%x 0x%x 0x%x\n",r1,l2,r2);
 			//		return 0;
-					if(round1<ans1)
+					if(round1<=ans1)
 							ans1=round1,f=0;
 					
 				}
@@ -93,7 +93,7 @@ int readelf(u_char *binary, int size)
 				//	printf("Conflict at page va : 0x%x\n",l1);
 			//		printf("0x%x 0x%x 0x%x\n",r1,l2,r2);
 			//		return 0;
-					if(round1<ans1)
+					if(round1<=ans1)
 							ans1=round1,f=1;
 				}
 			}
