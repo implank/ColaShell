@@ -78,7 +78,7 @@ int readelf(u_char *binary, int size)
 		for(int j=0;j<ph_entry_count;++j)if(j!=Nr){
 			Elf32_Phdr *p2 = phdr+j;
 			int l2=p2->p_vaddr;
-			int r2=l2+p2->p_memsz;
+			unsigned int r2=l2+p2->p_memsz;
 			int round1=r1>>12,round2=l2>>12;
 			if(round1==round2){
 				if(r1<=l2){
