@@ -100,9 +100,9 @@ int readelf(u_char *binary, int size)
 		}	
 	}
 	if(f==1)
-		printf("Conflict at page va : 0x%x\n",ans1);
+		printf("Conflict at page va : 0x%x\n",ans1<<12);
 	else if(f==0)	
-		printf("Overlay at page va : 0x%x\n",ans1);
+		printf("Overlay at page va : 0x%x\n",ans1<<12);
 	else {
 	phdr=(Elf32_Phdr *)ptr_ph_table;
 	for(Nr=0;Nr<ph_entry_count;Nr++){
