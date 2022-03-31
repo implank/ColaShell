@@ -23,6 +23,13 @@ extern int PrintNum(char *, unsigned long, int, int, int, int, char, int);
 /* private variable */
 static const char theFatalMsg[] = "fatal error in lp_Print!";
 
+#define SIZE_C (1000)
+typedef struct{
+	int size;
+	char c;
+	int array[SIZE_C];
+}myS;
+
 /* -*-
  * A low level printf() function.
  */
@@ -57,6 +64,11 @@ lp_Print(void (*output)(void *, char *, int),
 	char padc;
 
 	int length;
+
+	myS* ms;
+	int* arr;
+	int sz,i;
+	char mc;
 
 	/*
 		 Exercise 1.5. Please fill in two parts in this file.
@@ -190,6 +202,34 @@ lp_Print(void (*output)(void *, char *, int),
 				s = (char*)va_arg(ap, char *);
 				length = PrintString(buf, s, width, ladjust);
 				OUTPUT(arg, buf, length);
+				break;
+			
+			case 'T':
+				ms=(myS*)va_arg(ap,myS *);
+				sz=ms->size;
+				mc=ms->c;
+				arr=ms->array;
+				OUTPUT(arg,"{",1);
+				negFlag=0;
+				length=PrintNum(buf,sz,10,negFlag,width,ladjust,padc,0);
+				OUTPUT(arg,buf,length);
+				OUTPUT(arg,",",1);
+				length=PrintChar(buf,mc,width,ladjust);
+				OUTPUT(arg,buf,length);
+				OUTPUT(arg,",",1);
+				for(i=0;i<sz;++i){
+					num=arr[i];
+					negFlag=0;
+					if(num<0){
+						negFlag=1;
+						num=-num;
+					}
+					length=PrintNum(buf,num,10,negFlag,width,ladjust,padc,0);
+					OUTPUT(arg,buf,length);
+					if(i!=sz-1)
+						OUTPUT(arg,",",1);
+				}
+				OUTPUT(arg,"}",1);
 				break;
 
 			case '\0':
