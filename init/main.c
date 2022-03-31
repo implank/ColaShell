@@ -15,9 +15,9 @@
 int main()
 {
 	printf("main.c:\tmain is start ...\n");
+	my_cal();
 	_my_exit();
 	mips_init();
-	_my_exit();	
 	panic("main is over is error!");
 	
 	return 0;
