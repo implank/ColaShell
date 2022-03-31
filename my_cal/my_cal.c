@@ -7,7 +7,6 @@ void my_cal(){
 		else break;
 		num=num*10+c-'0';
 	}
-	//printf("%d\n",num);
 	int i=0,f=0;
 	for(i=31;i>=0;--i){
 		if((num>>i)&1){
