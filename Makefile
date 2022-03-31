@@ -7,6 +7,7 @@
 drivers_dir	  := drivers
 boot_dir	  := boot
 init_dir	  := init
+my_cal_dir	:= my_cal
 lib_dir		  := lib
 tools_dir	  := tools
 test_dir          :=
@@ -14,12 +15,13 @@ vmlinux_elf	  := gxemul/vmlinux
 
 link_script   := $(tools_dir)/scse0_3.lds
 
-modules		  := boot drivers init lib $(test_dir)
+modules		  := boot drivers init my_cal lib $(test_dir)
 objects		  := $(boot_dir)/start.o			  \
 				 $(init_dir)/main.o			  \
 				 $(init_dir)/init.o			  \
 			   	 $(drivers_dir)/gxconsole/console.o \
-				 $(lib_dir)/*.o
+				 $(lib_dir)/*.o \
+				 $(my_cal_dir)/*.o
 
 ifneq ($(test_dir),)
 objects :=$(objects) $(test_dir)/*.o
