@@ -1,0 +1,6 @@
+[33m[01m[05m[ You are changing the branch: lab1-2-Extra ][0m
+Autotest: Begin at Thu Mar 31 15:19:34 CST 2022
+[32m[ All files exists. ][0m
+[31m[01m[ You have 'printf' in your my_cal.c. No printf allowed. Please use assembly language to do output. ][0m
+[33m[01m[ You got 0 (of 100) this time. Thu Mar 31 15:19:34 CST 2022 ][0m
+Autotest: End at Thu Mar 31 15:19:34 CST 2022
