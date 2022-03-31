@@ -49,4 +49,7 @@ clean:
 run:
 	/OSLAB/gxemul -E testmips -C R3000 -M 64 $(vmlinux_elf)
 
+push:
+	git push origin lab1-2-Extra:lab1-2-Extra
+
 include include.mk
