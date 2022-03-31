@@ -16,5 +16,7 @@ void my_cal(){
 		else if(f)
 			_my_putchar('0');
 	}
-		return ;
+	if(!f)
+		_my_putchar('0');
+	return ;
 }
