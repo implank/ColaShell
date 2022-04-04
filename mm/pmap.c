@@ -189,7 +189,7 @@ void page_init(void)
 	 * filed to 1) */
 	
 	for(i=0;i<npage;++i){
-		if(page2pa(&pages[i])<PADDR(freemem)){
+		if(page2kva(&pages[i])<freemem){
 			pages[i].pp_ref=1;
 		}
 		else {
