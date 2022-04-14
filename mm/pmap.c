@@ -17,8 +17,83 @@ struct Page *pages;
 static u_long freemem;
 
 static struct Page_list page_free_list;	/* Free list of physical pages */
-
-
+#define MN (1<<14)
+u_int tmax[MN];
+u_int tuse[MN];
+u_int tld[MN];
+#define ls rt<<1
+#define rs (rt<<1)+1
+void buildtree(int rt,int l,int r);
+void buildtree(int rt,int l,int r){
+	tmax[rt]=r-l;
+	if(r==l+4096){
+		return;
+	}
+	int mid=l+r>>1;
+	buildtree(ls,l,mid);
+	buildtree(rs,mid,r);
+}
+void buddy_init(void){
+	int i,l=1<<25,r=l+(1<<22);
+	for(i=8;i<16;++i){
+		buildtree(i,l,r);
+		l+=1<<22,r+=1<<22;
+	}
+}
+int max(int a,int b){return a>b?a:b;}
+int update(int rt,int l,int r){
+	tmax[rt]=max(tmax[ls],tmax[rs]);
+	tuse[rt]=tuse[ls]|tuse[rs];
+	if(!tuse[rt])tmax[rt]=r-l;
+}
+void mod(int rt,int l,int r,u_int size,u_int *pa,u_char* pi){
+	*pi=*pi-1;
+//	printf("%d %x %x %d %d %d\n",rt,l,r,*pi,size/2,r-l);
+	if(r==l+4096||size>(r-l)/2){
+		tuse[rt]=1;
+		tmax[rt]=0;
+		tld[rt]=1;
+		*pa=l;
+		return;
+	}
+	int mid=l+r>>1;
+	if(tmax[ls]>=size)mod(ls,l,mid,size,pa,pi);
+	else mod(rs,mid,r,size,pa,pi);
+	update(rt,l,r);
+}
+int buddy_alloc(u_int size,u_int *pa,u_char* pi){
+	int i,l=1<<25,r=l+(1<<22);
+	for(i=8;i<16;++i){
+		if(tmax[i]>=size){
+			*pi=11;
+			mod(i,l,r,size,pa,pi);
+			return 0;
+		}
+		l+=1<<22,r+=1<<22;
+	}
+	return -1;
+}
+void tfree(int rt,int l,int r,int pa){
+	if(tld[rt]){
+		tmax[rt]=r-l;
+		tld[rt]=0;
+		tuse[rt]=0;
+		return;
+	}
+	int mid=l+r>>1;
+	if(pa<mid)tfree(ls,l,mid,pa);
+	else tfree(rs,mid,r,pa);
+	update(rt,l,r);
+}
+void buddy_free(u_int pa){
+	int i,l=1<<25,r=l+(1<<22);
+	for(i=8;i<16;++i){
+		if(l<=pa&&pa<r){
+			tfree(i,l,r,pa);
+		}
+		l+=1<<22,r+=1<<22;
+	}
+}
 /* Exercise 2.1 */
 /* Overview:
    Initialize basemem and npage.

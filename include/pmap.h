@@ -94,6 +94,11 @@ void page_free(struct Page *pp);
 void page_decref(struct Page *pp);
 int pgdir_walk(Pde *pgdir, u_long va, int create, Pte **ppte);
 int page_insert(Pde *pgdir, struct Page *pp, u_long va, u_int perm);
+void buildtree(int rt,int l,int r);
+void buddy_init(void);
+int buddy_alloc(u_int size,u_int *pa,u_char *pi);
+void buddy_free(u_int pa);
+
 struct Page *page_lookup(Pde *pgdir, u_long va, Pte **ppte);
 void page_remove(Pde *pgdir, u_long va) ;
 void tlb_invalidate(Pde *pgdir, u_long va);
