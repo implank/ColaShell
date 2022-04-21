@@ -9,11 +9,16 @@ page_alloc(&pp);
 Pde *pgdir = (Pde*)page2kva(pp);
 page_alloc(&pp);
 *((int*)pp+1023)=4;
+*((int*)pp+3)=-4;
 page_insert(pgdir, pp, 0x23300000, 0);
 page_insert(pgdir, pp, 0x23400000, 0);
 page_insert(pgdir, pp, 0x23500000, 0);
-pp = page_migrate(pgdir, pp);
+struct Page* tp;
+tp = page_migrate(pgdir, pp);
+
+//printf("check:%d\n",bcheck(tp,pp,BY2PG));
 printf("date:%d\n",*((int*)pp+1023));
+return;
 printf("%d\n", page2ppn(pp));
 pp = page_migrate(pgdir, pp);
 printf("%d\n", page2ppn(pp));
@@ -45,6 +50,30 @@ page_migrate_test();
 	panic("init.c:\tend of mips_init() reached!");
 }*/
 
+int bcheck(const void *src, void *dst, size_t len)
+{
+	void *max;
+
+	max = dst + len;
+
+	// copy machine words while possible
+	while (dst + 3 < max) {
+		printf("%d:%d\n",*(int*)dst,*(int*)src);
+		if(*(int *)dst != *(int *)src)
+			return 0;
+		dst += 4;
+		src += 4;
+	}
+
+	// finish remaining 0-3 bytes
+	while (dst < max) {
+		if(*(char *)dst != *(char *)src)
+			return 0;
+		dst += 1;
+		src += 1;
+	}
+	return 1;
+}
 void bcopy(const void *src, void *dst, size_t len)
 {
 	void *max;
