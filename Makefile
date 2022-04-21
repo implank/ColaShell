@@ -40,4 +40,9 @@ clean:
 	rm -rf *.o *~ $(vmlinux_elf)
 run:
 	/OSLAB/gxemul -E testmips -C R3000 -M 64 $(vmlinux_elf)
+
+push:
+	git add .
+	git commit -m "xx"
+	'git push origin lab2-2-Extra:lab2-2-Extra'
 include include.mk

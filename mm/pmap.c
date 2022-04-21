@@ -58,7 +58,8 @@ struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	int cnt=change_page_lookup(pgdir,pp,tp);
 	//assert(cnt==pp->pp_ref);
 	//printf("%d--\n",cnt);
-	if(pp->pp_ref==0)page_free(pp);
+	//if(pp->pp_ref==0)
+		page_free(pp);
 	return tp;
 }
 
