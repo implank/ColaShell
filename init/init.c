@@ -8,10 +8,12 @@ static void page_migrate_test(){
 page_alloc(&pp);
 Pde *pgdir = (Pde*)page2kva(pp);
 page_alloc(&pp);
+*((int*)pp+1023)=4;
 page_insert(pgdir, pp, 0x23300000, 0);
 page_insert(pgdir, pp, 0x23400000, 0);
 page_insert(pgdir, pp, 0x23500000, 0);
 pp = page_migrate(pgdir, pp);
+printf("date:%d\n",*((int*)pp+1023));
 printf("%d\n", page2ppn(pp));
 pp = page_migrate(pgdir, pp);
 printf("%d\n", page2ppn(pp));
