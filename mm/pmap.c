@@ -62,7 +62,7 @@ struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	//bcopy(pp,tp,BY2PG);
 	//printf("in mig check:%d\n",bcheck(pp,tp,BY2PG));
 	//bcopy(pp,tp,BY2PG);
-	page_free(pp);
+	//page_free(pp);
 	//bcopy(pp,tp,BY2PG);
 	//printf("in mig check:%d\n",bcheck(pp,tp,BY2PG));
 	return tp;
