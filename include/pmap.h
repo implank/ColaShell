@@ -92,6 +92,7 @@ void physical_memory_manage_check();
 int page_alloc(struct Page **pp);
 void page_free(struct Page *pp);
 void page_decref(struct Page *pp);
+int inverted_page_lookup(Pde *pgdir, struct Page *pp,int vpn_buffer[]);
 int pgdir_walk(Pde *pgdir, u_long va, int create, Pte **ppte);
 int page_insert(Pde *pgdir, struct Page *pp, u_long va, u_int perm);
 struct Page *page_lookup(Pde *pgdir, u_long va, Pte **ppte);

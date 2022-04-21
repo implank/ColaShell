@@ -17,7 +17,25 @@ struct Page *pages;
 static u_long freemem;
 
 static struct Page_list page_free_list;	/* Free list of physical pages */
-
+int inverted_page_lookup(Pde *pgdir,struct Page *pp,int vpn_buffer[]){
+	int pa=page2pa(pp);
+	Pde *pgdir_entry;
+	Pte *pgtable,*pgtable_entry;
+	int i,j;
+	int cnt=0;
+	for(i=0;i<1024;++i){
+		pgdir_entry=pgdir+i;
+		if(!((*pgdir_entry)&PTE_V))continue;
+		pgtable=KADDR(PTE_ADDR(*pgdir_entry));
+		for(j=0;j<1024;++j){
+			pgtable_entry=pgtable+j;
+			if(!((*pgtable_entry)&PTE_V))continue;
+			if(pa==PTE_ADDR(*pgtable_entry))
+				vpn_buffer[cnt++]=i*1024+j;
+		}
+	}
+	return cnt;
+}
 
 /* Exercise 2.1 */
 /* Overview:
