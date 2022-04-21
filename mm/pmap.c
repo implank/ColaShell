@@ -42,8 +42,10 @@ int change_page_lookup(Pde *pgdir,struct Page *pp,struct Page *tp){
 	}
 	return cnt;
 }
-
+int times=0;
 struct Page* page_migrate(Pde *pgdir, struct Page *pp){
+	times++;
+	if(times>3)assert(0);
 	int ppn=page2ppn(pp);
 	struct Page *tp;
 	if(ppn<=12287){
@@ -54,7 +56,6 @@ struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	}
 	//printf("page2ppn:%d\n",page2ppn(tp));
 	LIST_REMOVE(tp,pp_link);
-	bzero(tp,BY2PG);
 	bcopy(pp,tp,BY2PG);
 	int cnt=change_page_lookup(pgdir,pp,tp);
 	bcopy(pp,tp,BY2PG);
