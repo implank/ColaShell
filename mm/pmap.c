@@ -45,7 +45,7 @@ int change_page_lookup(Pde *pgdir,struct Page *pp,struct Page *tp){
 int times=0;
 struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	times++;
-	if(times>3)assert(0);
+	if(times>=2)assert(0);
 	int ppn=page2ppn(pp);
 	struct Page *tp;
 	if(ppn<=12287){
