@@ -58,7 +58,7 @@ struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	LIST_REMOVE(tp,pp_link);
 	bcopy(pp,tp,BY2PG);
 	int cnt=change_page_lookup(pgdir,pp,tp);
-	bcopy(pp,tp,BY2PG);
+	//bcopy(pp,tp,BY2PG);
 	//assert(cnt==pp->pp_ref);
 	//printf("%d--\n",cnt);
 	//if(pp->pp_ref==0)
