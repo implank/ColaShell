@@ -42,6 +42,7 @@ int change_page_lookup(Pde *pgdir,struct Page *pp,struct Page *tp){
 	}
 	return cnt;
 }
+
 struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	int ppn=page2ppn(pp);
 	struct Page *tp;
@@ -53,11 +54,10 @@ struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	}
 	//printf("page2ppn:%d\n",page2ppn(tp));
 	LIST_REMOVE(tp,pp_link);
-	//bzero(tp,BY2PG);
 	bzero(tp,BY2PG);
 	bcopy(pp,tp,BY2PG);
-	bzero(pp,BY2PG);
 	int cnt=change_page_lookup(pgdir,pp,tp);
+	bcopy(pp,tp,BY2PG);
 	//assert(cnt==pp->pp_ref);
 	//printf("%d--\n",cnt);
 	//if(pp->pp_ref==0)
