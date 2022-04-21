@@ -16,7 +16,52 @@ Pde *boot_pgdir;
 struct Page *pages;
 static u_long freemem;
 
-static struct Page_list page_free_list;	/* Free list of physical pages */
+struct Page_list page_free_list;	/* Free list of physical pages */
+struct Page_list fast_page_free_list;
+
+int change_page_lookup(Pde *pgdir,struct Page *pp,struct Page *tp){
+	int pa=page2pa(pp);
+	Pde *pgdir_entry;
+	Pte *pgtable,*pgtable_entry;
+	int i,j;
+	int cnt=0;
+	for(i=0;i<1024;++i){
+		pgdir_entry=pgdir+i;
+		if(!((*pgdir_entry)&PTE_V))continue;
+		pgtable=KADDR(PTE_ADDR(*pgdir_entry));
+		for(j=0;j<1024;++j){
+			pgtable_entry=pgtable+j;
+			if(!((*pgtable_entry)&PTE_V))continue;
+			if(pa==PTE_ADDR(*pgtable_entry)){
+				int perm=(*pgtable_entry)&(0xfff);
+				pp->pp_ref--;
+				*pgtable_entry=page2pa(tp)|perm;
+				cnt++;
+			}
+		}
+	}
+	return cnt;
+}
+struct Page* page_migrate(Pde *pgdir, struct Page *pp){
+	int ppn=page2ppn(pp);
+	struct Page *tp;
+	if(ppn<=12287){
+		tp=LIST_FIRST(&fast_page_free_list);
+	}
+	else {
+		tp=LIST_FIRST(&page_free_list);	
+	}
+	//printf("page2ppn:%d\n",page2ppn(tp));
+	LIST_REMOVE(tp,pp_link);
+	bcopy(pp,tp,BY2PG);
+	int cnt=change_page_lookup(pgdir,pp,tp);
+	//assert(cnt==pp->pp_ref);
+	//printf("%d--\n",cnt);
+	if(pp->pp_ref==0)page_free(pp);
+	return tp;
+}
+
+
 int inverted_page_lookup(Pde *pgdir,struct Page *pp,int vpn_buffer[]){
 	int pa=page2pa(pp);
 	Pde *pgdir_entry;
@@ -202,16 +247,22 @@ void page_init(void)
 	freemem=ROUND(freemem,BY2PG);
 	/* Step 3: Mark all memory blow `freemem` as used(set `pp_ref`
 	 * filed to 1) */
-	
+	int las=i;
 	for(i=0;i<npage;++i){
 		if(page2kva(&pages[i])<freemem){
 			pages[i].pp_ref=1;
+			las=i;
 		}
 		else {
 			pages[i].pp_ref=0;
-			LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
+			if(i<=12287)LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
+			else LIST_INSERT_HEAD(&fast_page_free_list,&pages[i],pp_link);
 		}
 	}
+	struct Page* pp;
+	pp=LIST_FIRST(&page_free_list);
+	//printf("in init ppn:%d\n",page2ppn(pp));
+	//printf("---%d---\n",las);
 	/* Step 4: Mark the other memory as free. */
 }
 
@@ -239,7 +290,7 @@ int page_alloc(struct Page **pp)
 		return -E_NO_MEM;
 	ppage_temp=LIST_FIRST(&page_free_list);
 	LIST_REMOVE(ppage_temp,pp_link);
-
+	//printf("in alloc ppn:%d\n ",page2ppn(ppage_temp));
 	/* Step 2: Initialize this page.
 	 * Hint: use `bzero`. */
 	bzero(page2kva(ppage_temp),BY2PG);
@@ -261,7 +312,8 @@ void page_free(struct Page *pp)
 
 	/* Step 2: If the `pp_ref` reaches 0, mark this page as free and return. */
 	if(pp->pp_ref==0){
-		LIST_INSERT_HEAD(&page_free_list,pp,pp_link);
+		if(page2ppn(pp)<=12287)LIST_INSERT_HEAD(&page_free_list,pp,pp_link);
+		else LIST_INSERT_HEAD(&fast_page_free_list,pp,pp_link);
 		return;
 	}
 
@@ -305,6 +357,7 @@ int pgdir_walk(Pde *pgdir, u_long va, int create, Pte **ppte)
       *pgdir_entry=(page2pa(ppage))|PTE_V|PTE_R;
 			ppage->pp_ref++;
 			pgtable=page2kva(ppage);
+	//		printf("in walk ppn:%d\n",page2ppn(ppage));
 		} 
 		else {
       *ppte = 0;
