@@ -44,5 +44,5 @@ run:
 push:
 	git add .
 	git commit -m "xx"
-	'git push origin lab2-2-Extra:lab2-2-Extra'
+	"git push origin lab2-2-Extra:lab2-2-Extra"
 include include.mk
