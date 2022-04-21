@@ -56,16 +56,13 @@ struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	}
 	//printf("page2ppn:%d\n",page2ppn(tp));
 	//bcopy(pp,tp,BY2PG);
-	LIST_REMOVE(tp,pp_link);;
+	//LIST_REMOVE(tp,pp_link);;
 	bcopy(pp,tp,BY2PG);
 	int cnt=change_page_lookup(pgdir,pp,tp);
 	//bcopy(pp,tp,BY2PG);
 	//printf("in mig check:%d\n",bcheck(pp,tp,BY2PG));
 	//bcopy(pp,tp,BY2PG);
-	//assert(cnt==pp->pp_ref);
-	//printf("%d--\n",cnt);
-	if(pp->pp_ref==0)
-		page_free(pp);
+	page_free(pp);
 	//bcopy(pp,tp,BY2PG);
 	//printf("in mig check:%d\n",bcheck(pp,tp,BY2PG));
 	return tp;
