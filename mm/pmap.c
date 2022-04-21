@@ -45,7 +45,6 @@ int change_page_lookup(Pde *pgdir,struct Page *pp,struct Page *tp){
 int times=0;
 struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	times++;
-	if(times>=2)assert(0);
 	int ppn=page2ppn(pp);
 	struct Page *tp;
 	if(ppn<=12287){
@@ -54,15 +53,13 @@ struct Page* page_migrate(Pde *pgdir, struct Page *pp){
 	else {
 		tp=LIST_FIRST(&page_free_list);	
 	}
-	//printf("page2ppn:%d\n",page2ppn(tp));
-	//bcopy(pp,tp,BY2PG);
-	//LIST_REMOVE(tp,pp_link);;
-	bcopy(pp,tp,BY2PG);
+	LIST_REMOVE(tp,pp_link);;
+	bcopy(page2kva(pp),page2kva(tp),BY2PG);
 	int cnt=change_page_lookup(pgdir,pp,tp);
 	//bcopy(pp,tp,BY2PG);
 	//printf("in mig check:%d\n",bcheck(pp,tp,BY2PG));
 	//bcopy(pp,tp,BY2PG);
-	//page_free(pp);
+	page_free(pp);
 	//bcopy(pp,tp,BY2PG);
 	//printf("in mig check:%d\n",bcheck(pp,tp,BY2PG));
 	return tp;
