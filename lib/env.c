@@ -20,7 +20,48 @@ extern char *KERNEL_SP;
 
 static u_int asid_bitmap[2] = {0}; // 64
 
-
+u_int osid=0x4;
+u_int exam_env_run(struct Env *e){
+	int f=0;
+	u_int id=e->env_asid;
+	if(id==0x105)f=1;
+	u_int i=id&(0x3f);
+	if(osid==(id>>6))return 0;
+	u_int index,inner;
+	index=i>>5;
+	inner=i&31;
+//	if(1)printf("%d %d %d %d\n",index,inner,asid_bitmap[index],asid_bitmap[index]&(1<<inner));
+	if((asid_bitmap[index]&(1<<inner))==0){
+		asid_bitmap[index]|=1<<inner;
+		e->env_asid=(osid<<6)|i;
+		return 0;
+	}
+	for(i=0;i<64;++i){
+		index=i>>5;
+		inner=i&31;
+		if((asid_bitmap[index]&(1<<inner))==0){
+			asid_bitmap[index]|=1<<inner;
+			e->env_asid=(osid<<6)|i;
+			return 0;
+		}
+	}
+	osid+=1;
+	asid_bitmap[0]=asid_bitmap[1]=0;
+	asid_bitmap[0]|=1;
+	e->env_asid=(osid<<6)|0;
+	return 1;
+}
+void exam_env_free(struct Env *e){
+	u_int id=e->env_asid;
+	u_int i=id&(0x3f);
+	if(osid==(id>>6)){
+		u_int index,inner;
+		index=i>>5;
+		inner=i&31;
+		asid_bitmap[index]&=~(1<<inner);
+	}
+		
+}
 /* Overview:
  *  This function is to allocate an unused ASID
  *
@@ -67,9 +108,13 @@ static void asid_free(u_int i) {
  *  return e's envid on success
  */
 u_int mkenvid(struct Env *e) {
-	u_int idx = e - envs;
+	/*u_int idx = e - envs;
 	u_int asid = asid_alloc();
 	return (asid << (1 + LOG2NENV)) | (1 << LOG2NENV) | idx;
+	*/
+	u_int idx=(u_int)e-(u_int)envs;
+	idx/=sizeof(struct Env);
+	return (1<<(LOG2NENV))|idx;
 }
 
 /* Overview:
@@ -142,6 +187,8 @@ void env_init(void){
 		envs[i].env_status=ENV_FREE;
 		LIST_INSERT_HEAD(&env_free_list,&envs[i],env_link);
 	}
+	osid=0x4;
+	asid_bitmap[0]=asid_bitmap[1]=0;
 }
 
 
@@ -223,6 +270,7 @@ env_setup_vm(struct Env *e)
 	e->env_id=mkenvid(e);
 	e->env_parent_id=parent_id;
 	e->env_status=ENV_RUNNABLE;
+	e->env_asid=0;
 	e->env_runs=0;
 	/* Step 4: Focus on initializing the sp register and cp0_status of env_tf field, located at this new Env. */
 	e->env_tf.cp0_status = 0x10001004;
