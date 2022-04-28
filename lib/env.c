@@ -14,13 +14,60 @@ struct Env *curenv = NULL;            // the current env
 
 static struct Env_list env_free_list;    // Free list
 struct Env_list env_sched_list[2];      // Runnable list
-
+struct Env_list env_wait_list[2];
+u_int S[3];
 extern Pde *boot_pgdir;
 extern char *KERNEL_SP;
 
 static u_int asid_bitmap[2] = {0}; // 64
-
-
+void S_init(int s,int num){
+	S[s]=num;
+}
+int P(struct Env*e,int s){
+	if(e->inlist)return -1;
+	if(S[s]>0){
+		S[s]--;
+		e->hold[s]++;
+		e->env_status=ENV_RUNNABLE;
+	}
+	else {
+		LIST_INSERT_TAIL(&env_wait_list[s],e,env_wait_link);
+		e->inlist=1;
+		e->env_status=ENV_NOT_RUNNABLE;
+	}
+	return 0;
+}
+int V(struct Env*e,int s){
+	struct Env* we;
+	if(e->inlist)return -1;
+	if(LIST_EMPTY(&env_wait_list[s])){
+		S[s]++;
+		if(e->hold[s])e->hold[s]--;
+		
+	}
+	else {
+		we=LIST_FIRST(&env_wait_list[s]);
+		LIST_REMOVE(we,env_wait_link);
+		we->inlist=0;
+		we->hold[s]++;
+		if(e->hold[s])e->hold[s]--;
+		we->env_status=ENV_RUNNABLE;
+	}
+	return 0;
+}
+int get_status(struct Env* e){
+	if(e->inlist)return 1;
+	if(e->hold[0]>0||e->hold[1]>0)return 2;
+	return 3;
+}
+int my_env_create(){
+	struct Env *e;
+	int r;
+	if(r=env_alloc(&e,0))return -1;
+	e->inlist=0;
+	e->hold[1]=e->hold[2]=0;
+	return e->env_id;
+}
 /* Overview:
  *  This function is to allocate an unused ASID
  *
@@ -133,6 +180,8 @@ void env_init(void){
 	LIST_INIT(&env_free_list);
 	LIST_INIT(&env_sched_list[0]);
 	LIST_INIT(&env_sched_list[1]);
+	LIST_INIT(&env_wait_list[0]);
+	LIST_INIT(&env_wait_list[1]);
 	/* Step 2: Traverse the elements of 'envs' array,
 	 *   set their status as free and insert them into the env_free_list.
 	 * Choose the correct loop order to finish the insertion.
