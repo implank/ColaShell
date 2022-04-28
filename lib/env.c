@@ -98,7 +98,7 @@ int envid2env(u_int envid, struct Env **penv, int checkperm)
 	}
 	e=envs+ENVX(envid);
 	if (e->env_status == ENV_FREE || e->env_id != envid) {
-		*penv = 0;
+		*penv = NULL;
 		return -E_BAD_ENV;
 	}
 	/* Hints:
@@ -110,7 +110,7 @@ int envid2env(u_int envid, struct Env **penv, int checkperm)
 	/*  Step 2: Make a check according to checkperm. */
 	if(checkperm){
 		if(e!=curenv&&e->env_parent_id!=curenv->env_id){
-			*penv=0;
+			*penv=NULL;
 			return -E_BAD_ENV;
 		}
 	}
@@ -223,7 +223,7 @@ env_setup_vm(struct Env *e)
 	e->env_id=mkenvid(e);
 	e->env_parent_id=parent_id;
 	e->env_status=ENV_RUNNABLE;
-	//e->env_runs=0;
+	e->env_runs=0;
 	/* Step 4: Focus on initializing the sp register and cp0_status of env_tf field, located at this new Env. */
 	e->env_tf.cp0_status = 0x10001004;
 	e->env_tf.regs[29]=USTACKTOP;
@@ -262,10 +262,11 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
 
 	/* Step 1: load all content of bin into memory. */
 	if(offset){
-		if(r=page_alloc(&p))return r;
+		if(p=page_lookup(pgdir,va,NULL));
+		else if(r=page_alloc(&p))return r;
 		bcopy(bin,page2kva(p)+offset,r=MIN(BY2PG-offset,bin_size));
 		page_insert(pgdir,p,va,PTE_R);
-	}
+	}//???
 	for (i = r; i < bin_size; i += BY2PG) {
 		/* Hint: You should alloc a new page. */
 		if(r=page_alloc(&p))return r;
@@ -449,6 +450,7 @@ env_run(struct Env *e)
 
 	/* Step 2: Set 'curenv' to the new environment. */
 	curenv=e;
+	curenv->env_status=ENV_RUNNABLE;
 	//curenv->env_status=ENV_RUNNABLE;
 	/* Step 3: Use lcontext() to switch to its address space. */
 	lcontext(e->env_pgdir);
