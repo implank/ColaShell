@@ -57,7 +57,7 @@ int V(struct Env*e,int s){
 }
 int get_status(struct Env* e){
 	if(e->inlist)return 1;
-	if(e->hold[0]>0||e->hold[1]>0)return 2;
+	if(e->hold[1]>0||e->hold[2]>0)return 2;
 	return 3;
 }
 int my_env_create(){
