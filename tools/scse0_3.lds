@@ -4,7 +4,9 @@ ENTRY(_start)
 SECTIONS
 {
   . = 0x80010000;
-
+	.except_vec3 : {
+    *(.text.exc_vec3)
+	}
   /*** exercise 3.13 ***/
 
   .text : {
