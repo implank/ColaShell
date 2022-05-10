@@ -12,6 +12,7 @@
  *  3. CANNOT use `return` statement!
  */
 /*** exercise 3.15 ***/
+static int runtime=0;
 void sched_yield(void)
 {
 	static int count = 0; // remaining time slices of current env
@@ -29,8 +30,11 @@ void sched_yield(void)
 	 *  functions or macros below may be used (not all):
 	 *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
 	 */
+	runtime++;
+	//printf("begin %d\n",runtime);
 	if(count&&e&&e->env_status==ENV_RUNNABLE){
 		count--;
+	//printf("end %d\n",runtime);
 		env_run(e);
 		return;
 	}
@@ -40,6 +44,7 @@ void sched_yield(void)
 			LIST_REMOVE(e,env_sched_link);
 			LIST_INSERT_TAIL(&env_sched_list[1-point],e,env_sched_link);
 			count--;
+	//printf("end %d\n",runtime);
 			env_run(e);
 			return;
 		}
@@ -51,6 +56,7 @@ void sched_yield(void)
 			LIST_REMOVE(e,env_sched_link);
 			LIST_INSERT_TAIL(&env_sched_list[1-point],e,env_sched_link);
 			count--;
+	//	printf("end %d\n",runtime);
 			env_run(e);
 			return;
 		}
@@ -71,4 +77,5 @@ void sched_yield(void)
     }
     count--;
     env_run(e);   */
+	panic("^^^^^^NO ENV FIND^^^^^^");
 }

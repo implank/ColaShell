@@ -147,7 +147,7 @@ int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm){
 	if((perm&PTE_V)==0||perm&PTE_COW||va>=UTOP)return -E_INVAL;
 	if(ret=page_alloc(&ppage))return ret;
 	if(ret=envid2env(envid,&env,1))return ret;
-	if(ret=page_insert(curenv->env_pgdir,ppage,va,perm))return ret;
+	if(ret=page_insert(env->env_pgdir,ppage,va,perm))return ret;
 	return 0;
 }
 
@@ -181,10 +181,10 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 	if((perm&PTE_V)==0||round_srcva>=UTOP||round_dstva>=UTOP)return -E_INVAL;
   if(ret=envid2env(srcid,&srcenv,0))return ret;
 	if(ret=envid2env(dstid,&dstenv,0))return ret;//???
-	ppage=page_lookup(curenv->env_pgdir,round_srcva,&ppte);
+	ppage=page_lookup(srcenv->env_pgdir,round_srcva,&ppte);
 	if(ppage==NULL)return -E_UNSPECIFIED;
 	//if((((*ppte)&PTE_COW)==0)&&((perm&PTE_COW)!=0))return -E_INVAL;
-	if(ret=page_insert(curenv->env_pgdir,ppage,round_dstva,perm))return ret;
+	if(ret=page_insert(dstenv->env_pgdir,ppage,round_dstva,perm))return ret;
 	return ret;
 }
 
@@ -202,8 +202,8 @@ int sys_mem_unmap(int sysno, u_int envid, u_int va){
 	int ret;
 	struct Env *env;
 	if(va>=UTOP)return -E_INVAL;
-	if(ret=envid2env(envid,&env,1))return ret;
-	page_remove(curenv->env_pgdir,va);
+	if(ret=envid2env(envid,&env,0))return ret;
+	page_remove(env->env_pgdir,va);
 	return ret;
 	//	panic("sys_mem_unmap not implemented");
 }

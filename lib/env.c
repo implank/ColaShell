@@ -257,10 +257,10 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
 	struct Env *env = (struct Env *)user_data;
 	struct Page *p = NULL;
 	u_long i;
-	int r;
+	int r=0;
 	Pde* pgdir=env->env_pgdir;
 	u_long offset = va - ROUNDDOWN(va, BY2PG);
-
+	//printf("in icode_mapper:va:%x va+sgsize:%x\n",va,va+sgsize);
 	/* Step 1: load all content of bin into memory. */
 	if(offset){
 		if(p=page_lookup(pgdir,va,NULL));
@@ -319,6 +319,7 @@ load_icode(struct Env *e, u_char *binary, u_int size)
 	load_elf(binary,size,&entry_point,e,load_icode_mapper);
 	/* Step 4: Set CPU's PC register as appropriate value. */
 	e->env_tf.pc = entry_point;
+	//printf("in create pc=%x  page:%x\n",e->env_tf.pc,page_lookup(e->env_pgdir,entry_point,NULL));
 }
 
 /* Overview:
@@ -448,7 +449,6 @@ env_run(struct Env *e)
 		curenv->env_tf=*old;
 		curenv->env_tf.pc=curenv->env_tf.cp0_epc;
 	}
-
 	/* Step 2: Set 'curenv' to the new environment. */
 	curenv=e;
 	curenv->env_status=ENV_RUNNABLE;
