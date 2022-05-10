@@ -29,7 +29,7 @@ void sched_yield(void)
 	 *  functions or macros below may be used (not all):
 	 *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
 	 */
-	if(count&&e){
+	if(count&&e&&e->env_status==ENV_RUNNABLE){
 		count--;
 		env_run(e);
 		return;

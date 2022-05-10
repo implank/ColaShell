@@ -65,8 +65,11 @@ u_int sys_getenvid(void)
  *  For convenience, you can just give up the current time slice.
  */
 /*** exercise 4.6 ***/
-void sys_yield(void)
-{
+void sys_yield(void){
+	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),
+				(void*)TIMESTACK-sizeof(struct Trapframe),
+				sizeof(struct Trapframe));
+	sched_yield();	
 }
 
 /* Overview:
@@ -88,11 +91,9 @@ int sys_env_destroy(int sysno, u_int envid)
 	*/
 	int r;
 	struct Env *e;
-
 	if ((r = envid2env(envid, &e, 1)) < 0) {
 		return r;
 	}
-
 	printf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
 	env_destroy(e);
 	return 0;
@@ -139,14 +140,15 @@ int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
  *	- env may modify its own address space or the address space of its children
  */
 /*** exercise 4.3 ***/
-int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm)
-{
-	// Your code here.
+int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm){
 	struct Env *env;
 	struct Page *ppage;
-	int ret;
-	ret = 0;
-
+	int ret = 0;
+	if((perm&PTE_V)==0||perm&PTE_COW||va>=UTOP)return -E_INVAL;
+	if(ret=page_alloc(&ppage))return ret;
+	if(ret=envid2env(envid,&env,1))return ret;
+	if(ret=page_insert(curenv->env_pgdir,ppage,va,perm))return ret;
+	return 0;
 }
 
 /* Overview:
@@ -164,8 +166,7 @@ int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm)
  */
 /*** exercise 4.4 ***/
 int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
-				u_int perm)
-{
+				u_int perm){
 	int ret;
 	u_int round_srcva, round_dstva;
 	struct Env *srcenv;
@@ -177,9 +178,13 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 	ret = 0;
 	round_srcva = ROUNDDOWN(srcva, BY2PG);
 	round_dstva = ROUNDDOWN(dstva, BY2PG);
-
-    //your code here
-
+	if((perm&PTE_V)==0||round_srcva>=UTOP||round_dstva>=UTOP)return -E_INVAL;
+  if(ret=envid2env(srcid,&srcenv,0))return ret;
+	if(ret=envid2env(dstid,&dstenv,0))return ret;//???
+	ppage=page_lookup(curenv->env_pgdir,round_srcva,&ppte);
+	if(ppage==NULL)return -E_UNSPECIFIED;
+	//if((((*ppte)&PTE_COW)==0)&&((perm&PTE_COW)!=0))return -E_INVAL;
+	if(ret=page_insert(curenv->env_pgdir,ppage,round_dstva,perm))return ret;
 	return ret;
 }
 
@@ -193,12 +198,12 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
  * Cannot unmap pages above UTOP.
  */
 /*** exercise 4.5 ***/
-int sys_mem_unmap(int sysno, u_int envid, u_int va)
-{
-	// Your code here.
+int sys_mem_unmap(int sysno, u_int envid, u_int va){
 	int ret;
 	struct Env *env;
-
+	if(va>=UTOP)return -E_INVAL;
+	if(ret=envid2env(envid,&env,1))return ret;
+	page_remove(curenv->env_pgdir,va);
 	return ret;
 	//	panic("sys_mem_unmap not implemented");
 }
