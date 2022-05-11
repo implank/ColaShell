@@ -330,11 +330,18 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	int r;
 	struct Env *e;
 	struct Page *p;
+	if(srcva>=UTOP)return -E_INVAL;
 	if(r=envid2env(envid,&e,0))return r;
 	if(e->env_ipc_recving==0)return -E_IPC_NOT_RECV;
+	e->env_ipc_recving=0;
+	e->env_ipc_from=curenv->env_id;
 	e->env_ipc_value=value;
+	if(srcva!=0){
+		p=page_lookup(curenv->env_pgdir,srcva,NULL);
+		if(p==NULL||e->env_ipc_dstva>=UTOP)return -1;
+		if(r=page_insert(e->env_pgdir,p,e->env_ipc_dstva,perm))return r;
+	}
 	e->env_status=ENV_RUNNABLE;
-	
-	if(r=
+	e->env_ipc_perm=perm;
 	return 0;
 }
