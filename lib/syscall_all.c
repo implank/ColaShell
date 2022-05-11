@@ -50,8 +50,7 @@ void *memcpy(void *destaddr, void const *srcaddr, u_int len)
  * Post-Condition:
  * 	return the current environment id
  */
-u_int sys_getenvid(void)
-{
+u_int sys_getenvid(void){
 	return curenv->env_id;
 }
 
@@ -83,8 +82,7 @@ void sys_yield(void){
  * Post-Condition:
  * 	Return 0 on success, < 0 when error occurs.
  */
-int sys_env_destroy(int sysno, u_int envid)
-{
+int sys_env_destroy(int sysno, u_int envid){
 	/*
 		printf("[%08x] exiting gracefully\n", curenv->env_id);
 		env_destroy(curenv);
@@ -173,7 +171,6 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 	struct Env *dstenv;
 	struct Page *ppage;
 	Pte *ppte;
-
 	ppage = NULL;
 	ret = 0;
 	round_srcva = ROUNDDOWN(srcva, BY2PG);
@@ -282,8 +279,7 @@ int sys_set_trapframe(int sysno, u_int envid, struct Trapframe *tf)
  * Post-Condition:
  * 	This function will make the whole system stop.
  */
-void sys_panic(int sysno, char *msg)
-{
+void sys_panic(int sysno, char *msg){
 	// no page_fault_mode -- we are trying to panic!
 	panic("%s", TRUP(msg));
 }
@@ -302,8 +298,11 @@ void sys_panic(int sysno, char *msg)
  * ENV_NOT_RUNNABLE, giving up cpu.
  */
 /*** exercise 4.7 ***/
-void sys_ipc_recv(int sysno, u_int dstva)
-{
+void sys_ipc_recv(int sysno, u_int dstva){
+	curenv->env_ipc_recving=1;
+	curenv->env_ipc_dstva=dstva;
+	curenv->env_status=ENV_NOT_RUNNABLE;
+	sys_yield();
 }
 
 /* Overview:
@@ -331,6 +330,11 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	int r;
 	struct Env *e;
 	struct Page *p;
-
+	if(r=envid2env(envid,&e,0))return r;
+	if(e->env_ipc_recving==0)return -E_IPC_NOT_RECV;
+	e->env_ipc_value=value;
+	e->env_status=ENV_RUNNABLE;
+	
+	if(r=
 	return 0;
 }
