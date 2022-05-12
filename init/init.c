@@ -13,11 +13,11 @@ void test() {
 	char a[100] = {5, 4, 3, 2, 1};
         int i = 0;
         // lw -> lh
-        i = test1(a, 2);
-        printf("%08x\n", i);
+        //i = test1(a, 2);
+        //printf("%08x\n", i);
         // lh -> lb
-        i = test1(a, 3);
-        printf("%08x\n", i);
+       // i = test1(a, 3);
+        //printf("%08x\n", i);
         // lw -> lb
         i = test2(a, 1);
         printf("%08x\n", i);

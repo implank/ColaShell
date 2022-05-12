@@ -156,17 +156,17 @@ END(do_refill)
 .set at
 NESTED(myfunc,0,sp)
 	nop
-	lw		k0, TF_EPC(sp)//get instruction
+	lw		k0, TF_EPC(sp)//get epc
 	move t4,k0
 	nop
-	lw k0,0(k0)
+	lw k0,0(k0)		//get ins
 	nop
 	srl		k1, k0, 26
 	and		k1,0x3f//get opcode
-	sub		t0,k1,35
+	subu		t0,k1,35
 	beqz	 t0,inlw
 	nop
-	sub		t0,k1,33
+	subu		t0,k1,33
 	beqz	t0,inlh
 	nop
 	j end
