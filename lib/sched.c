@@ -12,6 +12,8 @@
  *  3. CANNOT use `return` statement!
  */
 /*** exercise 3.15 ***/
+int ts[3]={1,2,4};
+int tt[3][2]={{2,1},{0,2},{1,0}};
 void sched_yield(void)
 {
 	static int count = 0; // remaining time slices of current env
@@ -29,45 +31,46 @@ void sched_yield(void)
 	 *  functions or macros below may be used (not all):
 	 *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
 	 */
-	/*if(count&&e&&e->env_status==ENV_RUNNABLE){
+	printf("\n");
+	if(count&&e&&e->env_status==ENV_RUNNABLE){
 		count--;
 		env_run(e);
 		return;
 	}
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
 		if(e->env_status==ENV_RUNNABLE){
-			count=e->env_pri;
+			count=e->env_pri*ts[point];
 			LIST_REMOVE(e,env_sched_link);
-			LIST_INSERT_TAIL(&env_sched_list[1-point],e,env_sched_link);
+			int dst=tt[point][e->env_pri%2];
+			LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
 			count--;
 			env_run(e);
 			return;
 		}
 	}
-	point=1-point;
+	point=(point+1)%3;
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
 		if(e->env_status==ENV_RUNNABLE){
-			count=e->env_pri;
+			count=e->env_pri*ts[point];
 			LIST_REMOVE(e,env_sched_link);
-			LIST_INSERT_TAIL(&env_sched_list[1-point],e,env_sched_link);
+			int dst=tt[point][e->env_pri%2];
+			LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
 			count--;
 			env_run(e);
 			return;
 		}
-	}*/
-	while(e && e->env_status != ENV_RUNNABLE){
-        LIST_REMOVE(e,env_sched_link);
-        e = NULL;
-        count = 0;
-    }
-    if(!count) {
-        if(LIST_EMPTY(&env_sched_list[point])){
-            point = 1 - point;
-        }
-        e = LIST_FIRST(&env_sched_list[point]);
-        LIST_REMOVE(e,env_sched_link);
-        LIST_INSERT_TAIL(&env_sched_list[1 - point], e, env_sched_link);
-        count = e->env_pri;
-    }
-    count--;
-    env_run(e);   }
+	}
+	point=(point+1)%3;
+	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
+		if(e->env_status==ENV_RUNNABLE){
+			count=e->env_pri*ts[point];
+			LIST_REMOVE(e,env_sched_link);
+			int dst=tt[point][e->env_pri%2];
+			LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
+			count--;
+			env_run(e);
+			return;
+		}
+	}
+	panic("no env in yield");
+}
