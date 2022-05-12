@@ -37,12 +37,14 @@ void sched_yield(void)
 		env_run(e);
 		return;
 	}
+	if(e&&!count){
+		int dst=tt[point][e->env_pri%2];
+		LIST_REMOVE(e,env_sched_link);
+		LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
+	}
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
 		if(e->env_status==ENV_RUNNABLE){
 			count=e->env_pri*ts[point];
-			LIST_REMOVE(e,env_sched_link);
-			int dst=tt[point][e->env_pri%2];
-			LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
 			count--;
 			env_run(e);
 			return;
@@ -52,9 +54,6 @@ void sched_yield(void)
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
 		if(e->env_status==ENV_RUNNABLE){
 			count=e->env_pri*ts[point];
-			LIST_REMOVE(e,env_sched_link);
-			int dst=tt[point][e->env_pri%2];
-			LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
 			count--;
 			env_run(e);
 			return;
@@ -64,9 +63,6 @@ void sched_yield(void)
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
 		if(e->env_status==ENV_RUNNABLE){
 			count=e->env_pri*ts[point];
-			LIST_REMOVE(e,env_sched_link);
-			int dst=tt[point][e->env_pri%2];
-			LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
 			count--;
 			env_run(e);
 			return;
