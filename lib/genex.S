@@ -152,8 +152,55 @@ nop
 			nop
 END(do_refill)
 
+.set noreorder
+.set at
+NESTED(myfunc,0,sp)
+	nop
+	lw		k0, TF_EPC(sp)//get instruction
+	move t4,k0
+	nop
+	lw k0,0(k0)
+	nop
+	srl		k1, k0, 26
+	and		k1,0x3f//get opcode
+	sub		t0,k1,35
+	beqz	 t0,inlw
+	nop
+	sub		t0,k1,33
+	beqz	t0,inlh
+	nop
+	j end
+	nop
+inlw: 
+	nop
+	li t0,0x03ffffff
+	nop
+	and		k1,k0,t0
+	li t0,0x84000000
+	nop
+	or		k1,k1,t0
+	sw		k1,0(t4)
+	nop
+	j end
+	nop
+inlh:
+	nop
+	li t0,0x03ffffff
+	nop
+	and k1,k0,t0
+	li t0,0x80000000
+	nop
+	or k1,k1,t0
+	nop
+	sw	k1,0(t4)
+	nop
+end:
+	nop
+	jr ra
+	nop
+END(myfunc)
 
-
+BUILD_HANDLER ade myfunc cli
 BUILD_HANDLER reserved do_reserved cli
 BUILD_HANDLER tlb	do_refill	cli
 BUILD_HANDLER mod	page_fault_handler cli
