@@ -43,7 +43,7 @@ void sched_yield(void)
 		LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
 	}
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
-		if(e->env_status==ENV_RUNNABLE){
+		if(e->env_status==ENV_RUNNABLE&&e->env_pri>0){
 			count=e->env_pri*ts[point];
 			count--;
 			env_run(e);
@@ -52,7 +52,7 @@ void sched_yield(void)
 	}
 	point=(point+1)%3;
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
-		if(e->env_status==ENV_RUNNABLE){
+		if(e->env_status==ENV_RUNNABLE&&e->env_pri>0){
 			count=e->env_pri*ts[point];
 			count--;
 			env_run(e);
@@ -61,7 +61,7 @@ void sched_yield(void)
 	}
 	point=(point+1)%3;
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
-		if(e->env_status==ENV_RUNNABLE){
+		if(e->env_status==ENV_RUNNABLE&&e->env_pri>0){
 			count=e->env_pri*ts[point];
 			count--;
 			env_run(e);
