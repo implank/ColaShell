@@ -218,13 +218,16 @@ int sys_mem_unmap(int sysno, u_int envid, u_int va){
  * 	Returns envid of new environment, or < 0 on error.
  */
 /*** exercise 4.8 ***/
-int sys_env_alloc(void)
-{
-	// Your code here.
+int sys_env_alloc(void){
 	int r;
 	struct Env *e;
-
-
+	if(r=env_alloc(&e,curenv->env_id))return r;
+	//e->env_tf=curenv->env_tf;
+	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),&e->env_tf,sizeof(struct Trapframe));
+	e->env_status=ENV_NOT_RUNNABLE;
+	e->env_tf.pc=e->env_tf.cp0_epc;
+	e->env_tf.regs[2]=0;
+	e->env_pri=curenv->env_pri;
 	return e->env_id;
 	//	panic("sys_env_alloc not implemented");
 }

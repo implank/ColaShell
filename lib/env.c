@@ -20,7 +20,6 @@ extern char *KERNEL_SP;
 
 static u_int asid_bitmap[2] = {0}; // 64
 
-
 /* Overview:
  *  This function is to allocate an unused ASID
  *
@@ -87,8 +86,7 @@ u_int mkenvid(struct Env *e) {
  *  return -E_BAD_ENV on error,and set *penv to NULL.
  */
 /*** exercise 3.3 ***/
-int envid2env(u_int envid, struct Env **penv, int checkperm)
-{
+int envid2env(u_int envid, struct Env **penv, int checkperm){
 	struct Env *e;
 	/* Hint: If envid is zero, return curenv.*/
 	/* Step 1: Assign value to e using envid. */
@@ -153,13 +151,10 @@ void env_init(void){
  */
 /*** exercise 3.4 ***/
 	static int
-env_setup_vm(struct Env *e)
-{
-
+env_setup_vm(struct Env *e){
 	int i, r;
 	struct Page *p = NULL;
 	Pde *pgdir;
-
 	/* Step 1: Allocate a page for the page directory
 	 *   using a function you completed in the lab2 and add its pp_ref.
 	 *   pgdir is the page directory of Env e, assign value for it. */
@@ -208,8 +203,7 @@ env_setup_vm(struct Env *e)
  *      (the value of PC should NOT be set in env_alloc)
  */
 /*** exercise 3.5 ***/
-	int env_alloc(struct Env **new, u_int parent_id)
-{
+	int env_alloc(struct Env **new, u_int parent_id){
 	int r;
 	struct Env *e;
 	/* Step 1: Get a new Env from env_free_list*/
