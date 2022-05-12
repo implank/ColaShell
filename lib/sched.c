@@ -32,40 +32,37 @@ void sched_yield(void)
 	 *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
 	 */
 	printf("\n");
-	if(count&&e&&e->env_status==ENV_RUNNABLE){
+	if(count>0&&e&&e->env_status==ENV_RUNNABLE){
 		count--;
 		env_run(e);
 		return;
 	}
-	if(e&&!count){
+	if(e&&count==0){
 		int dst=tt[point][e->env_pri%2];
 		LIST_REMOVE(e,env_sched_link);
 		LIST_INSERT_TAIL(&env_sched_list[dst],e,env_sched_link);
 	}
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
-		if(e->env_status==ENV_RUNNABLE&&e->env_pri>0){
+		if((e->env_status==ENV_RUNNABLE)&&(e->env_pri>0)){
 			count=e->env_pri*ts[point];
 			count--;
 			env_run(e);
-			return;
 		}
 	}
 	point=(point+1)%3;
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
-		if(e->env_status==ENV_RUNNABLE&&e->env_pri>0){
+		if((e->env_status==ENV_RUNNABLE)&&(e->env_pri>0)){
 			count=e->env_pri*ts[point];
 			count--;
 			env_run(e);
-			return;
 		}
 	}
 	point=(point+1)%3;
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){
-		if(e->env_status==ENV_RUNNABLE&&e->env_pri>0){
+		if((e->env_status==ENV_RUNNABLE)&&(e->env_pri>0)){
 			count=e->env_pri*ts[point];
 			count--;
 			env_run(e);
-			return;
 		}
 	}
 	panic("no env in yield");
