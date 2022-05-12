@@ -257,7 +257,7 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
 	struct Env *env = (struct Env *)user_data;
 	struct Page *p = NULL;
 	u_long i;
-	int r;
+	int r=0;
 	Pde* pgdir=env->env_pgdir;
 	u_long offset = va - ROUNDDOWN(va, BY2PG);
 
