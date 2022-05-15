@@ -11,3 +11,4 @@ void SJF (
     const int job_required_time [],
     int job_sched_start []
 );
+int findjob(int n);
