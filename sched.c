@@ -43,7 +43,6 @@ void SJF (
 		job_remain_time[i]=0;
 	i=1;
 	curtime=job_submitted_time[0];
-	job_sched_start[0]=curtime;
 	job_remain_time[0]=job_required_time[0];
 	while(i<number_of_jobs){
 		if(curtime+job_remain_time[cur]<=job_submitted_time[i]){
