@@ -37,39 +37,25 @@ void SJF (
     const int job_required_time [],
     int job_sched_start []
 ){
-	int i=0;
+	int i=0,n=number_of_jobs;
 	int cur=0,curtime=0;
 	for(i=0;i<=number_of_jobs;++i)
 		job_remain_time[i]=0;
-	i=1;
-	curtime=job_submitted_time[0];
-	job_remain_time[0]=job_required_time[0];
-	while(i<number_of_jobs){
-		if(curtime+job_remain_time[cur]<=job_submitted_time[i]){
-			curtime+=job_remain_time[cur];
+	i=0;
+	while(i<n){
+		cur=findjob(n);
+		if(cur!=n){
+			job_sched_start[cur]=curtime;
+			curtime+=job_required_time[cur];
 			job_remain_time[cur]=0;
-			cur=findjob(number_of_jobs);
-			if(cur!=number_of_jobs&&job_remain_time[cur]==job_required_time[cur])
-				job_sched_start[cur]=curtime;
-			if(cur==number_of_jobs){
-				cur=i;
-				i++;
-				job_remain_time[cur]=job_required_time[cur];
-				job_sched_start[cur]=curtime=job_submitted_time[cur];;
-			}
+			while(job_submitted_time[i]<=curtime&&i<n)
+				job_remain_time[i]=job_required_time[i],i++;
 		}
 		else {
-			job_remain_time[cur]-=job_submitted_time[i]-curtime;
 			curtime=job_submitted_time[i];
-			if(job_remain_time[cur]<=job_required_time[i]){
+			while(curtime==job_submitted_time[i]&&i<n){
 				job_remain_time[i]=job_required_time[i];
 				i++;
-			}
-			else {
-				cur=i;
-				i++;
-				job_remain_time[cur]=job_required_time[cur];
-				job_sched_start[cur]=job_submitted_time[cur];
 			}
 		}
 	}
