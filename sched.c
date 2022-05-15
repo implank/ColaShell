@@ -50,7 +50,7 @@ void SJF (
 			curtime+=job_remain_time[cur];
 			job_remain_time[cur]=0;
 			cur=findjob(number_of_jobs);
-			if(job_remain_time[cur]==job_required_time[cur])
+			if(job_remain_time[cur]==job_required_time[cur]&&cur!=number_of_jobs)
 				job_sched_start[cur]=curtime;
 			if(cur==number_of_jobs){
 				cur=i;
