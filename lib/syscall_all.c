@@ -220,8 +220,7 @@ int sys_env_alloc(void){
 	int r;
 	struct Env *e;
 	if(r=env_alloc(&e,curenv->env_id))return r;
-	//e->env_tf=curenv->env_tf;
-	//maybe same 
+	//e->env_tf=curenv->env_tf; maybe same 
 	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),&e->env_tf,sizeof(struct Trapframe));
 	e->env_status=ENV_NOT_RUNNABLE;
 	e->env_tf.pc=e->env_tf.cp0_epc;
@@ -247,15 +246,10 @@ int sys_env_alloc(void){
 int sys_set_env_status(int sysno, u_int envid, u_int status){
 	struct Env *env;
 	int ret;
-	//printf("i'm in set_env_status!!\n");
-	//printf("envid:%d status:%d\n",envid,status);
 	if(status!=ENV_RUNNABLE&&status!=ENV_NOT_RUNNABLE&&status!=ENV_FREE)
 		return -E_INVAL;
-	//printf("cross inval check\n");
 	if(ret=envid2env(envid,&env,0))return ret;
-	//printf("env_status:%d status:%d\n",env->env_status,status);
 	if(env->env_status!=ENV_RUNNABLE&&status==ENV_RUNNABLE){
-		//printf("i was putting in list!!\n");
 		LIST_INSERT_HEAD(&env_sched_list[0],env,env_sched_link);
 	}
 	if(env->env_status==ENV_RUNNABLE&&status!=ENV_RUNNABLE)
