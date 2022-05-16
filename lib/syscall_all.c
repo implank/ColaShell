@@ -36,11 +36,9 @@ void *memcpy(void *destaddr, void const *srcaddr, u_int len)
 {
 	char *dest = destaddr;
 	char const *src = srcaddr;
-
 	while (len-- > 0) {
 		*dest++ = *src++;
 	}
-
 	return destaddr;
 }
 
@@ -111,11 +109,11 @@ int sys_env_destroy(int sysno, u_int envid){
 /*** exercise 4.12 ***/
 int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
 {
-	// Your code here.
 	struct Env *env;
 	int ret;
-
-
+	if(ret=envid2env(envid,&env,0))return ret;
+	env->env_pgfault_handler=func;
+	env->env_xstacktop=xstacktop;
 	return 0;
 	//	panic("sys_set_pgfault_handler not implemented");
 }
@@ -223,6 +221,7 @@ int sys_env_alloc(void){
 	struct Env *e;
 	if(r=env_alloc(&e,curenv->env_id))return r;
 	//e->env_tf=curenv->env_tf;
+	//maybe same 
 	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),&e->env_tf,sizeof(struct Trapframe));
 	e->env_status=ENV_NOT_RUNNABLE;
 	e->env_tf.pc=e->env_tf.cp0_epc;
@@ -245,12 +244,15 @@ int sys_env_alloc(void){
  * 	The status of environment will be set to `status` on success.
  */
 /*** exercise 4.14 ***/
-int sys_set_env_status(int sysno, u_int envid, u_int status)
-{
-	// Your code here.
+int sys_set_env_status(int sysno, u_int envid, u_int status){
 	struct Env *env;
 	int ret;
-
+	if(status!=ENV_RUNNABLE||status!=ENV_NOT_RUNNABLE||status!=ENV_FREE)
+		return -E_INVAL;
+	if(ret=envid2env(envid,&env,0))return ret;
+	if(env->env_status!=ENV_RUNNABLE&&status==ENV_RUNNABLE)
+		LIST_INSERT_HEAD(&env_sched_list[0],env,env_sched_link);
+	env->env_status=status;
 	return 0;
 	//	panic("sys_env_set_status not implemented");
 }
@@ -327,9 +329,7 @@ void sys_ipc_recv(int sysno, u_int dstva){
  */
 /*** exercise 4.7 ***/
 int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
-					 u_int perm)
-{
-
+					 u_int perm){
 	int r;
 	struct Env *e;
 	struct Page *p;
