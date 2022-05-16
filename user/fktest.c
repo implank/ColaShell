@@ -3,6 +3,7 @@
 
 void umain()
 {
+	writef("fuck\n");
 	int a = 0;
 	int id = 0;
 
@@ -14,9 +15,9 @@ void umain()
 				writef("\t\tthis is child2 :a:%d\n", a);
 			}
 		}
-
+	
 		a += 2;
-
+		
 		for (;;) {
 			writef("\tthis is child :a:%d\n", a);
 		}

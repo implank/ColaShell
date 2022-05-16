@@ -254,7 +254,7 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
 	int r=0;
 	Pde* pgdir=env->env_pgdir;
 	u_long offset = va - ROUNDDOWN(va, BY2PG);
-	//printf("in icode_mapper:va:%x va+sgsize:%x\n",va,va+sgsize);
+	printf("in icode_mapper:va:%x va+sgsize:%x\n",va,va+sgsize);
 	/* Step 1: load all content of bin into memory. */
 	if(offset){
 		if(p=page_lookup(pgdir,va,NULL));

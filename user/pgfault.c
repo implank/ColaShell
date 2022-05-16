@@ -15,9 +15,7 @@ extern void __asm_pgfault_handler(void);
 // allocate an exception stack and tell the kernel to
 // call _asm_pgfault_handler on it.
 //
-void
-set_pgfault_handler(void (*fn)(u_int va))
-{
+void set_pgfault_handler(void (*fn)(u_int va)){
 	if (__pgfault_handler == 0) {
 		// Your code here:
 		// map one page of exception stack with top at UXSTACKTOP

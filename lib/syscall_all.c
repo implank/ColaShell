@@ -247,12 +247,18 @@ int sys_env_alloc(void){
 int sys_set_env_status(int sysno, u_int envid, u_int status){
 	struct Env *env;
 	int ret;
-	if(status!=ENV_RUNNABLE||status!=ENV_NOT_RUNNABLE||status!=ENV_FREE)
+	//printf("i'm in set_env_status!!\n");
+	//printf("envid:%d status:%d\n",envid,status);
+	if(status!=ENV_RUNNABLE&&status!=ENV_NOT_RUNNABLE&&status!=ENV_FREE)
 		return -E_INVAL;
+	//printf("cross inval check\n");
 	if(ret=envid2env(envid,&env,0))return ret;
-	if(env->env_status!=ENV_RUNNABLE&&status==ENV_RUNNABLE)
+	//printf("env_status:%d status:%d\n",env->env_status,status);
+	if(env->env_status!=ENV_RUNNABLE&&status==ENV_RUNNABLE){
+		//printf("i was putting in list!!\n");
 		LIST_INSERT_HEAD(&env_sched_list[0],env,env_sched_link);
-	if(env->env_status==ENV_RUNNABLE&&status!+ENV_RUNNABLE)
+	}
+	if(env->env_status==ENV_RUNNABLE&&status!=ENV_RUNNABLE)
 		LIST_REMOVE(env,env_sched_link);
 	env->env_status=status;
 	return 0;

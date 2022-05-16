@@ -56,7 +56,7 @@ void sched_yield(void)
 			LIST_REMOVE(e,env_sched_link);
 			LIST_INSERT_TAIL(&env_sched_list[1-point],e,env_sched_link);
 			count--;
-	//	printf("end %d\n",runtime);
+		//printf("end %d\n",runtime);
 			env_run(e);
 			return;
 		}
