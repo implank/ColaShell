@@ -14,7 +14,6 @@ extern void exit();
 
 extern struct Env *env;
 
-
 #define USED(x) (void)(x)
 //////////////////////////////////////////////////////printf
 #include <stdarg.h>
@@ -37,6 +36,9 @@ __attribute__((noreturn));
 int spawn(char *prog, char **argv);
 int spawnl(char *prot, char *args, ...);
 int fork(void);
+int syscall_try_acquire_console(void);
+int syscall_release_console();
+
 
 void user_bcopy(const void *src, void *dst, size_t len);
 void user_bzero(void *v, u_int n);

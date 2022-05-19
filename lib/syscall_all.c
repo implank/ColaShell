@@ -7,7 +7,21 @@
 
 extern char *KERNEL_SP;
 extern struct Env *curenv;
-
+int mutex=-1;
+int sys_acquire(int sysno){
+	if(mutex==-1){
+		mutex=curenv->env_id;
+		return 0;
+	}
+	else return -1;
+}
+int sys_release(int sysno){
+	if(mutex==curenv->env_id){
+		mutex=-1;
+		return 0;
+	}
+	else return -1;
+}
 /* Overview:
  * 	This function is used to print a character on screen.
  *
@@ -16,7 +30,9 @@ extern struct Env *curenv;
  */
 void sys_putchar(int sysno, int c, int a2, int a3, int a4, int a5)
 {
-	printcharc((char) c);
+	if(mutex==curenv->env_id){
+		printcharc((char) c);
+	}
 	return ;
 }
 
