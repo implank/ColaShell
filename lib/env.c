@@ -258,8 +258,8 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
 	//printf("in icode_mapper:va:%x va+sgsize:%x\n",va,va+sgsize);
 	/* Step 1: load all content of bin into memory. */
 	if(offset){
-		if(p=page_lookup(pgdir,va,NULL));
-		else if(r=page_alloc(&p))return r;
+		//if(p=page_lookup(pgdir,va,NULL));
+		if(r=page_alloc(&p))return r;
 		bcopy(bin,page2kva(p)+offset,r=MIN(BY2PG-offset,bin_size));
 		page_insert(pgdir,p,va,PTE_R);
 	}//???
