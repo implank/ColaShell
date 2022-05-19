@@ -7,7 +7,7 @@
 
 extern char *KERNEL_SP;
 extern struct Env *curenv;
-int occ=0;
+extern int occ=0;
 int sys_acquire(int sysno,int a1,int a2,int a3,int a4,int a5){
 	if(occ==0){
 		curenv->flag=1;
@@ -17,7 +17,7 @@ int sys_acquire(int sysno,int a1,int a2,int a3,int a4,int a5){
 	else return -1;
 }
 int sys_release(int sysno,int a1,int a2,int a3,int a4,int a5){
-	if(curenv->flag==1){
+	if(occ==1&&curenv->flag==1){
 		occ=0;
 		curenv->flag=0;
 		return 0;
@@ -32,7 +32,7 @@ int sys_release(int sysno,int a1,int a2,int a3,int a4,int a5){
  */
 void sys_putchar(int sysno, int c, int a2, int a3, int a4, int a5)
 {
-	if(curenv->flag){
+	if(occ==1&&curenv->flag){
 		printcharc((char) c);
 	}
 	return ;
@@ -196,7 +196,7 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 	if(ret=envid2env(dstid,&dstenv,0))return ret;//???
 	ppage=page_lookup(srcenv->env_pgdir,round_srcva,&ppte);
 	if(ppage==NULL)return -E_UNSPECIFIED;
-	//if((((*ppte)&PTE_COW)==0)&&((perm&PTE_COW)!=0))return -E_INVAL;
+	if((((*ppte)&PTE_R)==0)&&((perm&PTE_R)!=0))return -E_INVAL;
 	if(ret=page_insert(dstenv->env_pgdir,ppage,round_dstva,perm))return ret;
 	return ret;
 }
