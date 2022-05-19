@@ -140,7 +140,7 @@ void env_init(void){
 		envs[i].flag=0;
 		LIST_INSERT_HEAD(&env_free_list,&envs[i],env_link);
 	}
-	occ=0;
+	 occ=0;
 }
 
 
