@@ -16,10 +16,10 @@ void mips_init() {
 
 	//ENV_CREATE(user_tltest);
 	//ENV_CREATE(user_fktest);
-	//ENV_CREATE(user_pingpong);
+	ENV_CREATE(user_pingpong);
 	int i;
 	for(i=0;i<10;++i){
-		ENV_CREATE(user_lktest);
+	//	ENV_CREATE(user_lktest);
 	}
 
 	trap_init();

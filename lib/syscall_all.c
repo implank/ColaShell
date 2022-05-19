@@ -26,9 +26,9 @@ int sys_release(int sysno,int a1,int a2,int a3,int a4,int a5){
 }
 void sys_putchar(int sysno, int c, int a2, int a3, int a4, int a5)
 {
-  if(occ==1&&curenv->flag){
+ // if(occ==1&&curenv->flag){
     printcharc((char) c);
-  } 
+  //} 
     return;
 }
 void *memcpy(void *destaddr, void const *srcaddr, u_int len)
