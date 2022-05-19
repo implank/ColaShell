@@ -30,7 +30,7 @@ void sched_yield(void)
 	 *  functions or macros below may be used (not all):
 	 *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
 	 */
-	runtime++;
+	/*runtime++;
 	//printf("begin %d\n",runtime);
 	if(count&&e&&e->env_status==ENV_RUNNABLE){
 		count--;
@@ -60,8 +60,8 @@ void sched_yield(void)
 			env_run(e);
 			return;
 		}
-	}
-	/*while(e && e->env_status != ENV_RUNNABLE){
+	}*/
+	while(e && e->env_status != ENV_RUNNABLE){
         LIST_REMOVE(e,env_sched_link);
         e = NULL;
         count = 0;
@@ -76,6 +76,6 @@ void sched_yield(void)
         count = e->env_pri;
     }
     count--;
-    env_run(e);   */
+    env_run(e);   
 	panic("^^^^^^NO ENV FIND^^^^^^");
 }
