@@ -8,14 +8,14 @@
 extern char *KERNEL_SP;
 extern struct Env *curenv;
 int mutex=-1;
-int sys_acquire(int sysno){
+int sys_acquire(int sysno,int a1,int a2,int a3,int a4,int a5){
 	if(mutex==-1){
 		mutex=curenv->env_id;
 		return 0;
 	}
 	else return -1;
 }
-int sys_release(int sysno){
+int sys_release(int sysno,int a1,int a2,int a3,int a4,int a5){
 	if(mutex==curenv->env_id){
 		mutex=-1;
 		return 0;
