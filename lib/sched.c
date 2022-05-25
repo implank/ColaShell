@@ -32,10 +32,10 @@ void sched_yield(void)
 	 */
 	runtime++;
 	//printf("begin %d\n",runtime);
-	if(count&&e&&e->env_status==ENV_RUNNABLE){
+	if(count&&curenv&&curenv->env_status==ENV_RUNNABLE){
 		count--;
 	//printf("end %d\n",runtime);
-		env_run(e);
+		env_run(curenv);
 		return;
 	}
 	LIST_FOREACH(e,&env_sched_list[point],env_sched_link){

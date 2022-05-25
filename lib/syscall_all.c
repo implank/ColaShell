@@ -111,7 +111,7 @@ int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
 {
 	struct Env *env;
 	int ret;
-	if(ret=envid2env(envid,&env,0))return ret;
+	if(ret=envid2env(envid,&env,1))return ret;
 	env->env_pgfault_handler=func;
 	env->env_xstacktop=xstacktop;
 	return 0;
@@ -221,7 +221,7 @@ int sys_env_alloc(void){
 	struct Env *e;
 	if(r=env_alloc(&e,curenv->env_id))return r;
 	//e->env_tf=curenv->env_tf; maybe same 
-	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),&e->env_tf,sizeof(struct Trapframe));
+	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),&(e->env_tf),sizeof(struct Trapframe));
 	e->env_status=ENV_NOT_RUNNABLE;
 	e->env_tf.pc=e->env_tf.cp0_epc;
 	e->env_tf.regs[2]=0;
