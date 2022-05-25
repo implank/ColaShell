@@ -65,3 +65,5 @@ END(handle_sys)
 	.word sys_ipc_can_send
 	.word sys_ipc_recv
 	.word sys_cgetc
+    .word sys_write_dev
+    .word sys_read_dev
