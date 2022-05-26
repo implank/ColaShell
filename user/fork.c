@@ -6,18 +6,19 @@
 
 int make_shared(void *va){
 	int r=0;
-	u_int perm,pn;
-	va=ROUNDDOWN(va,BY2PG);
-  if(va>=UTOP)return -1;
-	pn=(u_int)va>>PGSHIFT;
+	u_int perm,pn,addr;
+	addr=(u_int)va;
+	addr=ROUNDDOWN(addr,BY2PG);
+  if(addr>=UTOP)return -1;
+	pn=(u_int)addr>>PGSHIFT;
 	perm=(*vpt)[pn]&(0xfff);
 	if(perm&PTE_V){
 		if(!(perm&PTE_R))return -1;
-		syscall_mem_map(0,va,0,va,PTE_V|PTE_R|PTE_LIBRARY);
+		syscall_mem_map(0,addr,0,addr,PTE_V|PTE_R|PTE_LIBRARY);
 	}
 	else {
-		syscall_mem_alloc(0,va,PTE_V|PTE_R|PTE_LIBRARY);
-		syscall_mem_map(0,va,0,va,PTE_V|PTE_R|PTE_LIBRARY);
+		syscall_mem_alloc(0,addr,PTE_V|PTE_R|PTE_LIBRARY);
+		syscall_mem_map(0,addr,0,addr,PTE_V|PTE_R|PTE_LIBRARY);
 	}
 	return PTE_ADDR((*vpt)[pn]&(0xfff));
 }
