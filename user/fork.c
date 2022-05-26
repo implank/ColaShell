@@ -4,7 +4,7 @@
 #include <mmu.h>
 #include <env.h>
 
-int make_shared(void *va){
+/*int make_shared(void *va){
 	int r=0;
 	u_int perm,pn,addr;
 	addr=(u_int)va;
@@ -21,6 +21,29 @@ int make_shared(void *va){
 		syscall_mem_map(0,addr,0,addr,PTE_V|PTE_R|PTE_LIBRARY);
 	}
 	return PTE_ADDR((*vpt)[pn]&(0xfff));
+}*/
+int make_shared(void *va)
+{
+	u_int paddr;
+	u_int addr;
+	u_int perm;
+
+	addr = (u_int)va;
+		if(addr >= UTOP) {
+		return -1;
+	}
+	if(((*vpd)[PDX(addr)] & PTE_V == 0)||((*vpt)[addr>>12]==0)){
+		syscall_mem_alloc(0,addr,PTE_V|PTE_R|PTE_LIBRARY);
+	}else {
+		perm =(*vpt)[addr>>12] & 0xfff;
+		if((perm & PTE_R) == 0) {
+			return -1;
+		}
+		perm = perm | PTE_LIBRARY;
+		syscall_mem_map(0,addr,0, addr,perm);
+	}
+	paddr = (*vpt)[addr>>12] & (~0xfff);
+	return paddr;
 }
 /* ----------------- help functions ---------------- */
 
