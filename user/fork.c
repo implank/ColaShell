@@ -4,7 +4,23 @@
 #include <mmu.h>
 #include <env.h>
 
-
+int make_shared(void *va){
+	int r=0;
+	u_int perm,pn;
+	va=ROUNDDOWN(va,BY2PG);
+  if(va>=UTOP)return -1;
+	pn=(int)va>>PGSHIFT;
+	perm=(*vpt)[pn]&(0xfff);
+	if(perm&PTE_V){
+		if(!(perm&PTE_R))return -1;
+		syscall_mem_map(0,va,0,va,PTE_V|PTE_R|PTE_LIBRARY);
+	}
+	else {
+		if(syscall_mem_alloc(0,va,PTE_V|PTE_R|PTE_LIBRARY))return -1;
+		if(syscall_mem_map(0,va,0,va,PTE_V|PTE_R|PTE_LIBRARY))return -1;
+	}
+	return PTE_ADDR((*vpt)[pn]&(0xfff));
+}
 /* ----------------- help functions ---------------- */
 
 /* Overview:
