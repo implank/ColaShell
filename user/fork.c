@@ -12,7 +12,7 @@ int make_shared(void *va){
   if(addr>=UTOP)return -1;
 	pn=(u_int)addr>>PGSHIFT;
 	perm=(*vpt)[pn]&(0xfff);
-	if(perm&PTE_V){
+	if((((*vpd)[PDX(addr)])&PTE_V)&&(((*vpt)[addr>>12])&&PTE_V)){
 		if(!(perm&PTE_R))return -1;
 		syscall_mem_map(0,addr,0,addr,PTE_V|PTE_R|PTE_LIBRARY);
 	}
