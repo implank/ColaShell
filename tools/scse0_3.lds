@@ -3,12 +3,12 @@ ENTRY(_start)
 
 SECTIONS
 {
-  . = 0x80010000;
+  . = 0x80000080;
 	.except_vec3 : {
     *(.text.exc_vec3)
 	}
   /*** exercise 3.13 ***/
-
+	. = 0x80010000;
   .text : {
         *(.text)
     }

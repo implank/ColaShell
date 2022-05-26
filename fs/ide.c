@@ -1,5 +1,5 @@
 /*
- * operations on IDE disk.
+ * operations on	IDE disk.
  */
 
 #include "fs.h"
@@ -22,21 +22,25 @@
 //
 // Hint: use syscalls to access device registers and buffers
 /*** exercise 5.2 ***/
-void
-ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs)
-{
+void ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs){
 	// 0x200: the size of a sector: 512 bytes.
 	int offset_begin = secno * 0x200;
 	int offset_end = offset_begin + nsecs * 0x200;
 	int offset = 0;
-
+	int tmp;
 	while (offset_begin + offset < offset_end) {
-		// Your code here
-		// error occurred, then panic.
+		tmp = 0;
+		if(syscall_write_dev(&tmp,0x13000010,4))user_panic("Error occurred during read the IDE disk!\n");
+		tmp = offset_begin + offset;
+		if(syscall_write_dev(&tmp,0x13000000,4))user_panic("Error occurred during read the IDE disk!\n");
+		tmp = 0;
+		if(syscall_write_dev(&tmp,0x13000020,4))user_panic("Error occurred during read the IDE disk!\n");
+		if(syscall_read_dev(&tmp,0x13000030,4))user_panic("Error occurred during read the IDE disk!\n");
+		if(tmp==0)user_panic("Error occurred during read the IDE disk!\n");
+		if(syscall_read_dev(dst+offset,0x13004000,512))user_panic("Error occurred during read the IDE disk!\n");
+		offset += 0x200;
 	}
 }
-
-
 // Overview:
 // 	write data to IDE disk.
 //
@@ -51,20 +55,23 @@ ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs)
 //
 // Hint: use syscalls to access device registers and buffers
 /*** exercise 5.2 ***/
-void
-ide_write(u_int diskno, u_int secno, void *src, u_int nsecs)
-{
-	// Your code here
-	// int offset_begin = ;
-	// int offset_end = ;
-	// int offset = ;
-
+void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs){
+	int offset_begin = secno * 0x200;
+	int offset_end = offset_begin + nsecs * 0x200;
+	int offset = 0;
 	// DO NOT DELETE WRITEF !!!
 	writef("diskno: %d\n", diskno);
-
-	// while ( < ) {
-		// copy data from source array to disk buffer.
-
-		// if error occur, then panic.
-	// }
+	int tmp;
+	while (offset_begin + offset < offset_end) {
+		if(syscall_write_dev(src+offset,0x13004000,512))user_panic("Error occurred during write the IDE disk!\n");
+		tmp=0;
+		if(syscall_write_dev(&tmp,0x13000010,4)) user_panic("Error occurred during write the IDE disk!\n");
+		tmp=offset_begin + offset;
+		if(syscall_write_dev(&tmp,0x13000000,4)) user_panic("Error occurred during write the IDE disk!\n");
+		tmp=1;
+		if(syscall_write_dev(&tmp,0x13000020,4)) user_panic("Error occurred during write the IDE disk!\n");
+		if(syscall_read_dev(&tmp,0x13000030,4))user_panic("Error occurred during write the IDE disk!\n");
+		if(tmp==0)user_panic("Error occurred during write the IDE disk!\n");
+		offset+=0x200;
+	}
 }
