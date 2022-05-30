@@ -73,15 +73,14 @@ void user_bzero(void *v, u_int n)
  * the faulting page at correct address.
  */
 /*** exercise 4.13 ***/
-static void pgfault(u_int va)
-{
+static void pgfault(u_int va){
 	u_int *tmp;
 	u_int perm;
 	//	writef("fork.c:pgfault():\t va:%x\n",va);
 	perm=(*vpt)[VPN(va)]&(0xfff);
 	if((perm&PTE_COW)==0)user_panic("`va` is not a copy-on-write page.");
 	perm^=PTE_COW;
-	tmp=USTACKTOP;//???
+	tmp=USTACKTOP;
 	//map the new page at a temporary place
 	syscall_mem_alloc(0,tmp,perm);
 	//copy the content

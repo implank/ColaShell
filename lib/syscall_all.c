@@ -4,18 +4,15 @@
 #include <printf.h>
 #include <pmap.h>
 #include <sched.h>
-
 extern char *KERNEL_SP;
 extern struct Env *curenv;
-
 /* Overview:
  * 	This function is used to print a character on screen.
  *
  * Pre-Condition:
  * 	`c` is the character you want to print.
  */
-void sys_putchar(int sysno, int c, int a2, int a3, int a4, int a5)
-{
+void sys_putchar(int sysno, int c, int a2, int a3, int a4, int a5){
 	printcharc((char) c);
 	return ;
 }
@@ -32,8 +29,7 @@ void sys_putchar(int sysno, int c, int a2, int a3, int a4, int a5)
  * 	the content of `destaddr` area(from `destaddr` to `destaddr`+`len`) will
  * be same as that of `srcaddr` area.
  */
-void *memcpy(void *destaddr, void const *srcaddr, u_int len)
-{
+void *memcpy(void *destaddr, void const *srcaddr, u_int len){
 	char *dest = destaddr;
 	char const *src = srcaddr;
 	while (len-- > 0) {
@@ -41,7 +37,6 @@ void *memcpy(void *destaddr, void const *srcaddr, u_int len)
 	}
 	return destaddr;
 }
-
 /* Overview:
  *	This function provides the environment id of current process.
  *
@@ -51,7 +46,6 @@ void *memcpy(void *destaddr, void const *srcaddr, u_int len)
 u_int sys_getenvid(void){
 	return curenv->env_id;
 }
-
 /* Overview:
  *	This function enables the current process to give up CPU.
  *
@@ -68,7 +62,6 @@ void sys_yield(void){
 			sizeof(struct Trapframe));
 	sched_yield();	
 }
-
 /* Overview:
  * 	This function is used to destroy the current environment.
  *
@@ -82,8 +75,8 @@ void sys_yield(void){
  */
 int sys_env_destroy(int sysno, u_int envid){
 	/*
-		 printf("[%08x] exiting gracefully\n", curenv->env_id);
-		 env_destroy(curenv);
+		printf("[%08x] exiting gracefully\n", curenv->env_id);
+		env_destroy(curenv);
 	 */
 	int r;
 	struct Env *e;
@@ -94,7 +87,6 @@ int sys_env_destroy(int sysno, u_int envid){
 	env_destroy(e);
 	return 0;
 }
-
 /* Overview:
  * 	Set envid's pagefault handler entry point and exception stack.
  *
@@ -107,8 +99,7 @@ int sys_env_destroy(int sysno, u_int envid){
  * 	Returns 0 on success, < 0 on error.
  */
 /*** exercise 4.12 ***/
-int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop)
-{
+int sys_set_pgfault_handler(int sysno, u_int envid, u_int func, u_int xstacktop){
 	struct Env *env;
 	int ret;
 	if(ret=envid2env(envid,&env,1))return ret;
@@ -146,7 +137,6 @@ int sys_mem_alloc(int sysno, u_int envid, u_int va, u_int perm){
 	if(ret=page_insert(env->env_pgdir,ppage,va,perm))return ret;
 	return 0;
 }
-
 /* Overview:
  * 	Map the page of memory at 'srcva' in srcid's address space
  * at 'dstva' in dstid's address space with permission 'perm'.
@@ -182,7 +172,6 @@ int sys_mem_map(int sysno, u_int srcid, u_int srcva, u_int dstid, u_int dstva,
 	if(ret=page_insert(dstenv->env_pgdir,ppage,round_dstva,perm))return ret;
 	return ret;
 }
-
 /* Overview:
  * 	Unmap the page of memory at 'va' in the address space of 'envid'
  * (if no page is mapped, the function silently succeeds)
@@ -202,7 +191,6 @@ int sys_mem_unmap(int sysno, u_int envid, u_int va){
 	return ret;
 	//	panic("sys_mem_unmap not implemented");
 }
-
 /* Overview:
  * 	Allocate a new environment.
  *
@@ -221,7 +209,9 @@ int sys_env_alloc(void){
 	struct Env *e;
 	if(r=env_alloc(&e,curenv->env_id))return r;
 	//e->env_tf=curenv->env_tf; maybe same 
-	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),&(e->env_tf),sizeof(struct Trapframe));
+	bcopy((void*)KERNEL_SP-sizeof(struct Trapframe),
+		&(e->env_tf),
+		sizeof(struct Trapframe));
 	e->env_status=ENV_NOT_RUNNABLE;
 	e->env_tf.pc=e->env_tf.cp0_epc;
 	e->env_tf.regs[2]=0;
@@ -258,7 +248,6 @@ int sys_set_env_status(int sysno, u_int envid, u_int status){
 	return 0;
 	//	panic("sys_env_set_status not implemented");
 }
-
 /* Overview:
  * 	Set envid's trap frame to tf.
  *
@@ -271,8 +260,7 @@ int sys_set_env_status(int sysno, u_int envid, u_int status){
  *
  * Note: This hasn't be used now?
  */
-int sys_set_trapframe(int sysno, u_int envid, struct Trapframe *tf)
-{
+int sys_set_trapframe(int sysno, u_int envid, struct Trapframe *tf){
 
 	return 0;
 }
@@ -384,7 +372,6 @@ int sys_write_dev(int sysno, u_int va, u_int dev, u_int len){
 	bcopy(va,0xA0000000+dev,len);
 	return 0;
 }
-
 /* Overview:
  * 	This function is used to read data from device, which is
  * 	represented by its mapped physical address.

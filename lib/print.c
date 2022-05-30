@@ -40,14 +40,11 @@ lp_Print(void (*output)(void *, char *, int),
 																					 (*output)(arg, s, l); \
 																				 } \
 	}
-
 	char buf[LP_MAX_BUF];
 
 	char c;
 	char *s;
 	long int num;
-
-
 
 	int longFlag;
 	int negFlag;
@@ -57,15 +54,11 @@ lp_Print(void (*output)(void *, char *, int),
 	char padc;
 
 	int length;
-
 	/*
 		 Exercise 1.5. Please fill in two parts in this file.
 	 */
-
 	for(; *fmt != '\0';) {
-
 		/* Part1: your code here */
-
 		if(*fmt!='%'){ 
 			/* scan for the next '%' */
 			/* flush the string found so far */
@@ -74,8 +67,6 @@ lp_Print(void (*output)(void *, char *, int),
 			/* check "are we hitting the end?" */
 			continue;
 		}
-
-
 		/* we found a '%' */
 		fmt++;
 		ladjust=0;
@@ -94,7 +85,6 @@ lp_Print(void (*output)(void *, char *, int),
 			width=width*10+Ctod(*fmt);
 			fmt++;
 		}
-
 		/* check for long */
 		longFlag=0;
 		if(*fmt=='l'){
@@ -103,9 +93,7 @@ lp_Print(void (*output)(void *, char *, int),
 		}
 		/* check for other prefixes */
 		//%%
-
 		/* check format flag */
-
 		negFlag = 0;
 		switch (*fmt) {
 			case 'b':
@@ -117,7 +105,6 @@ lp_Print(void (*output)(void *, char *, int),
 				length = PrintNum(buf, num, 2, 0, width, ladjust, padc, 0);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case 'd':
 			case 'D':
 				if (longFlag) { 
@@ -137,7 +124,6 @@ lp_Print(void (*output)(void *, char *, int),
 				length = PrintNum(buf, num, 10, negFlag, width, ladjust, padc, 0);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case 'o':
 			case 'O':
 				if (longFlag) { 
@@ -148,7 +134,6 @@ lp_Print(void (*output)(void *, char *, int),
 				length = PrintNum(buf, num, 8, 0, width, ladjust, padc, 0);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case 'u':
 			case 'U':
 				if (longFlag) { 
@@ -159,7 +144,6 @@ lp_Print(void (*output)(void *, char *, int),
 				length = PrintNum(buf, num, 10, 0, width, ladjust, padc, 0);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case 'x':
 				if (longFlag) { 
 					num = va_arg(ap, long int);
@@ -169,7 +153,6 @@ lp_Print(void (*output)(void *, char *, int),
 				length = PrintNum(buf, num, 16, 0, width, ladjust, padc, 0);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case 'X':
 				if (longFlag) { 
 					num = va_arg(ap, long int);
@@ -179,42 +162,31 @@ lp_Print(void (*output)(void *, char *, int),
 				length = PrintNum(buf, num, 16, 0, width, ladjust, padc, 1);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case 'c':
 				c = (char)va_arg(ap, int);
 				length = PrintChar(buf, c, width, ladjust);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case 's':
 				s = (char*)va_arg(ap, char *);
 				length = PrintString(buf, s, width, ladjust);
 				OUTPUT(arg, buf, length);
 				break;
-
 			case '\0':
 				fmt --;
 				break;
-
 			default:
 				/* output this char as it is */
 				OUTPUT(arg, fmt, 1);
 		}	/* switch (*fmt) */
-
 		fmt ++;
 	}		/* for(;;) */
-
 	/* special termination call */
 	OUTPUT(arg, "\0", 1);
 }
-
-
 /* --------------- local help functions --------------------- */
-	int
-PrintChar(char * buf, char c, int length, int ladjust)
-{
+int PrintChar(char * buf, char c, int length, int ladjust){
 	int i;
-
 	if (length < 1) length = 1;
 	if (ladjust) {
 		*buf = c;
@@ -226,15 +198,12 @@ PrintChar(char * buf, char c, int length, int ladjust)
 	return length;
 }
 
-	int
-PrintString(char * buf, char* s, int length, int ladjust)
-{
+int PrintString(char * buf, char* s, int length, int ladjust){
 	int i;
 	int len=0;
 	char* s1 = s;
 	while (*s1++) len++;
 	if (length < len) length = len;
-
 	if (ladjust) {
 		for (i=0; i< len; i++) buf[i] = s[i];
 		for (i=len; i< length; i++) buf[i] = ' ';
@@ -244,11 +213,8 @@ PrintString(char * buf, char* s, int length, int ladjust)
 	}
 	return length;
 }
-
-	int
-PrintNum(char * buf, unsigned long u, int base, int negFlag, 
-		int length, int ladjust, char padc, int upcase)
-{
+int PrintNum(char * buf, unsigned long u, int base, int negFlag, 
+		int length, int ladjust, char padc, int upcase){
 	/* algorithm :
 	 *  1. prints the number from left to right in reverse form.
 	 *  2. fill the remaining spaces with padc if length is longer than
@@ -258,11 +224,9 @@ PrintNum(char * buf, unsigned long u, int base, int negFlag,
 	 *  3. if (!ladjust) we reverse the whole string including paddings
 	 *  4. otherwise we only reverse the actual string representing the num.
 	 */
-
 	int actualLength =0;
 	char *p = buf;
 	int i;
-
 	do {
 		int tmp = u %base;
 		if (tmp <= 9) {
@@ -274,15 +238,12 @@ PrintNum(char * buf, unsigned long u, int base, int negFlag,
 		}
 		u /= base;
 	} while (u != 0);
-
 	if (negFlag) {
 		*p++ = '-';
 	}
-
 	/* figure out actual length and adjust the maximum length */
 	actualLength = p - buf;
 	if (length < actualLength) length = actualLength;
-
 	/* add padding */
 	if (ladjust) {
 		padc = ' ';
@@ -293,8 +254,6 @@ PrintNum(char * buf, unsigned long u, int base, int negFlag,
 	} else {
 		for (i = actualLength; i< length; i++) buf[i] = padc;
 	}
-
-
 	/* prepare to reverse the string */
 	{
 		int begin = 0;
