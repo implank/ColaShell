@@ -216,13 +216,13 @@ struct File *create_file(struct File *dirf) {
 	for(i=0;i<nblk;i++){
 		if(i<NDIRECT)bno=dirf->f_direct[i];
 		else bno=((uint32_t *)(disk[dirf->f_indirect].data))[i];
-		dirblk=disk[bno].data;
+		dirblk=(struct File*)disk[bno].data;
 		for(j=0;j<FILE2BLK;j++) {
 			if(dirblk[j].f_name[0]=='\0')return &dirblk[j];
 		}
 	}
 	bno=make_link_block(dirf,nblk);
-	return disk[bno].data;
+	return (struct File*)disk[bno].data;
 	// Step2: Find an unused pointer
 }
 
