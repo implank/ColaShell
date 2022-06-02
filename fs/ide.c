@@ -6,6 +6,34 @@
 #include "lib.h"
 #include <mmu.h>
 
+int time_read(){
+	int trigger=1;
+	int time=0;
+	syscall_write_dev(&trigger,0x15000000,4);
+	syscall_read_dev(&time,0x15000010,4);
+	return time;
+}
+void raid0_write(u_int secno, void *src, u_int nsecs){
+	int i;
+	for(i=secno;i<secno+nsecs;++i){
+		if(i%2==0){
+			ide_write(1,i/2,src+(i-secno)*0x200,1);
+		}
+		else 
+			ide_write(2,i/2,src+(i-secno)*0x200,1);
+	}
+
+}
+void raid0_read(u_int secno, void *dst, u_int nsecs){
+	int i;
+	for(i=secno;i<secno+nsecs;++i){
+		if(i%2==0){
+			ide_read(1,i/2,dst+(i-secno)*0x200,1);
+		}
+		else 
+			ide_read(2,i/2,dst+(i-secno)*0x200,1);
+	}
+}
 // Overview:
 // 	read data from IDE disk. First issue a read request through
 // 	disk register and then copy data from disk buffer
@@ -29,7 +57,7 @@ void ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs){
 	int offset = 0;
 	int tmp;
 	while (offset_begin + offset < offset_end) {
-		tmp = 0;
+		tmp = diskno;
 		if(syscall_write_dev(&tmp,0x13000010,4))user_panic("Error occurred during read the IDE disk!\n");
 		tmp = offset_begin + offset;
 		if(syscall_write_dev(&tmp,0x13000000,4))user_panic("Error occurred during read the IDE disk!\n");
@@ -64,7 +92,7 @@ void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs){
 	int tmp;
 	while (offset_begin + offset < offset_end) {
 		if(syscall_write_dev(src+offset,0x13004000,512))user_panic("Error occurred during write the IDE disk!\n");
-		tmp=0;
+		tmp=diskno;
 		if(syscall_write_dev(&tmp,0x13000010,4)) user_panic("Error occurred during write the IDE disk!\n");
 		tmp=offset_begin + offset;
 		if(syscall_write_dev(&tmp,0x13000000,4)) user_panic("Error occurred during write the IDE disk!\n");
@@ -75,3 +103,5 @@ void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs){
 		offset+=0x200;
 	}
 }
+
+
