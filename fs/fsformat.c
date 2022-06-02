@@ -57,7 +57,6 @@ void reverse_block(struct Block *b) {
 	struct Super *s;
 	struct File *f, *ff;
 	uint32_t *u;
-
 	switch (b->type) {
 		case BLOCK_FREE:
 		case BLOCK_BOOT:
@@ -101,18 +100,14 @@ void reverse_block(struct Block *b) {
 			break;
 	}
 }
-
 // Initial the disk. Do some work with bitmap and super block.
 void init_disk() {
 	int i, r, diff;
-
 	// Step 1: Mark boot sector block.
 	disk[0].type = BLOCK_BOOT;
-
 	// Step 2: Initialize boundary.
 	nbitblock = (NBLOCK + BIT2BLK - 1) / BIT2BLK;
 	nextbno = 2 + nbitblock;
-
 	// Step 2: Initialize bitmap blocks.
 	for(i = 0; i < nbitblock; ++i) {
 		disk[2+i].type = BLOCK_BMAP;
@@ -124,7 +119,6 @@ void init_disk() {
 		diff = NBLOCK % BIT2BLK / 8;
 		memset(disk[2+(nbitblock-1)].data+diff, 0x00, BY2BLK - diff);
 	}
-
 	// Step 3: Initialize super block.
 	disk[1].type = BLOCK_SUPER;
 	super.s_magic = FS_MAGIC;
@@ -132,13 +126,11 @@ void init_disk() {
 	super.s_root.f_type = FTYPE_DIR;
 	strcpy(super.s_root.f_name, "/");
 }
-
 // Get next block id, and set `type` to the block's type.
 int next_block(int type) {
 	disk[nextbno].type = type;
 	return nextbno++;
 }
-
 // Flush disk block usage to bitmap.
 void flush_bitmap() {
 	int i;
@@ -147,31 +139,24 @@ void flush_bitmap() {
 		((uint32_t *)disk[2+i/BIT2BLK].data)[(i%BIT2BLK)/32] &= ~(1<<(i%32));
 	}
 }
-
 // Finish all work, dump block array into physical file.
 void finish_fs(char *name) {
 	int fd, i, k, n, r;
 	uint32_t *p;
-
 	// Prepare super block.
 	memcpy(disk[1].data, &super, sizeof(super));
-
 	// Dump data in `disk` to target image file.
 	fd = open(name, O_RDWR|O_CREAT, 0666);
 	for(i = 0; i < 1024; ++i) {
 		reverse_block(disk+i);
 		write(fd, disk[i].data, BY2BLK);
 	}
-
 	// Finish.
 	close(fd);
 }
-
 // Save block link.
-void save_block_link(struct File *f, int nblk, int bno)
-{
+void save_block_link(struct File *f, int nblk, int bno){
 	assert(nblk < NINDIRECT); // if not, file is too large !
-
 	if(nblk < NDIRECT) {
 		f->f_direct[nblk] = bno;
 	}
@@ -183,7 +168,6 @@ void save_block_link(struct File *f, int nblk, int bno)
 		((uint32_t *)(disk[f->f_indirect].data))[nblk] = bno;
 	}
 }
-
 // Make new block contians link to files in a directory.
 int make_link_block(struct File *dirf, int nblk) {
 	int bno = next_block(BLOCK_FILE);
@@ -191,7 +175,6 @@ int make_link_block(struct File *dirf, int nblk) {
 	dirf->f_size += BY2BLK;
 	return bno;
 }
-
 // Overview:
 //      Create new block pointer for a file under sepcified directory.
 //      Notice that when we delete a file, we do not re-arrenge all
@@ -225,18 +208,14 @@ struct File *create_file(struct File *dirf) {
 	return (struct File*)disk[bno].data;
 	// Step2: Find an unused pointer
 }
-
 // Write file to disk under specified dir.
 void write_file(struct File *dirf, const char *path) {
 	int iblk = 0, r = 0, n = sizeof(disk[0].data);
 	uint8_t buffer[n+1], *dist;
 	struct File *target = create_file(dirf);
-
 	/* in case `create_file` is't filled */
 	if (target == NULL) return;
-
 	int fd = open(path, O_RDONLY);
-
 	// Get file name with no path prefix.
 	const char *fname = strrchr(path, '/');
 	if(fname)
@@ -247,7 +226,6 @@ void write_file(struct File *dirf, const char *path) {
 
 	target->f_size = lseek(fd, 0, SEEK_END);
 	target->f_type = FTYPE_REG;
-
 	// Start reading file.
 	lseek(fd, 0, SEEK_SET);
 	while((r = read(fd, disk[nextbno].data, n)) > 0) {
@@ -266,19 +244,15 @@ void write_file(struct File *dirf, const char *path) {
 void write_directory(struct File *dirf, char *name) {
 	// Your code here
 }
-
 int main(int argc, char **argv) {
 	int i;
-
 	init_disk();
-
 	if(argc < 3 || (strcmp(argv[2], "-r") == 0 && argc != 4)) {
 		fprintf(stderr, "\
 				Usage: fsformat gxemul/fs.img files...\n\
 				fsformat gxemul/fs.img -r DIR\n");
 		exit(0);
 	}
-
 	if(strcmp(argv[2], "-r") == 0) {
 		for (i = 3; i < argc; ++i) {
 			write_directory(&super.s_root, argv[i]);
@@ -289,9 +263,7 @@ int main(int argc, char **argv) {
 			write_file(&super.s_root, argv[i]);
 		}
 	}
-
 	flush_bitmap();
 	finish_fs(argv[1]);
-
 	return 0;
 }

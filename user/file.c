@@ -19,8 +19,6 @@ struct Dev devfile = {
 	.dev_close =	file_close,
 	.dev_stat =	file_stat,
 };
-
-
 // Overview:
 //	Open a file (or directory).
 //
@@ -28,40 +26,35 @@ struct Dev devfile = {
 //	the file descriptor onsuccess,
 //	< 0 on failure.
 /*** exercise 5.8 ***/
-int
-open(const char *path, int mode)
-{
+int open(const char *path, int mode){
 	struct Fd *fd;
 	struct Filefd *ffd;
 	u_int size, fileid;
 	int r;
 	u_int va;
 	u_int i;
-
 	// Step 1: Alloc a new Fd, return error code when fail to alloc.
 	// Hint: Please use fd_alloc.
-
-
+	if(r=fd_alloc(&fd))return r;
 	// Step 2: Get the file descriptor of the file to open.
 	// Hint: Read fsipc.c, and choose a function.
-
-
+	if(r=fsipc_open(path,mode,fd))return r;
 	// Step 3: Set the start address storing the file's content. Set size and fileid correctly.
 	// Hint: Use fd2data to get the start address.
-
-
+	va=fd2data(fd);
+	ffd=(struct Filefd*)fd;
+	fileid=ffd->f_fileid;
+	size=ffd->f_file.f_size;
 	// Step 4: Alloc memory, map the file content into memory.
-
-
+	for(i=0;i<size;i+=BY2BLK)
+		if(r=fsipc_map(fileid,i,va+i))return r;
 	// Step 5: Return the number of file descriptor.
-
-
+	return fd2num(fd);
 }
 
 // Overview:
 //	Close a file descriptor
-int
-file_close(struct Fd *fd)
+int file_close(struct Fd *fd)
 {
 	int r;
 	struct Filefd *ffd;
@@ -249,22 +242,16 @@ ftruncate(int fdnum, u_int size)
 
 	return 0;
 }
-
 // Overview:
 //	Delete a file or directory.
 /*** exercise 5.10 ***/
-int
-remove(const char *path)
-{
+int remove(const char *path){
 	// Your code here.
 	// Call fsipc_remove.
-
+	return fsipc_remove(path);
 }
-
 // Overview:
 //	Synchronize disk with buffer cache
-int
-sync(void)
-{
+int sync(void){
 	return fsipc_sync();
 }

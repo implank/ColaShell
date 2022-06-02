@@ -29,7 +29,7 @@ void ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs){
 	int offset = 0;
 	int tmp;
 	while (offset_begin + offset < offset_end) {
-		tmp = 0;
+		tmp = diskno;
 		if(syscall_write_dev(&tmp,0x13000010,4))user_panic("Error occurred during read the IDE disk!\n");
 		tmp = offset_begin + offset;
 		if(syscall_write_dev(&tmp,0x13000000,4))user_panic("Error occurred during read the IDE disk!\n");
@@ -64,7 +64,7 @@ void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs){
 	int tmp;
 	while (offset_begin + offset < offset_end) {
 		if(syscall_write_dev(src+offset,0x13004000,512))user_panic("Error occurred during write the IDE disk!\n");
-		tmp=0;
+		tmp=diskno;
 		if(syscall_write_dev(&tmp,0x13000010,4)) user_panic("Error occurred during write the IDE disk!\n");
 		tmp=offset_begin + offset;
 		if(syscall_write_dev(&tmp,0x13000000,4)) user_panic("Error occurred during write the IDE disk!\n");
