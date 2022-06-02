@@ -19,8 +19,8 @@ int raid4_valid(u_int diskno){
 }
 int raid4_write(u_int blockno, void *src){
 	int i,j,f=0;
-	u_char data[5][2*512];
-	user_bzero(data,5*2*512);
+	u_char data[6][2*512];
+	user_bzero(data,6*2*512);
 	for(i=1;i<=4;++i)
 		user_bcopy(src+512*(i-1),&data[i][0],512),
 		user_bcopy(src+2048+512*(i-1),&data[i][512],512);
@@ -47,8 +47,8 @@ int raid4_write(u_int blockno, void *src){
 }
 int raid4_read(u_int blockno, void *dst){
 	int i,j,f=0;
-	u_char data[5][2*512];
-	user_bzero(data,5*2*512);
+	u_char data[6][2*512];
+	user_bzero(data,6*2*512);
 	for(i=1;i<=5;++i){
 		if(!raid4_valid(i))
 			f++;
@@ -74,7 +74,7 @@ int raid4_read(u_int blockno, void *dst){
 			user_bcopy(&data[i][512],dst+2048+512*(i-1),512);
 		}
 		if(cor)return 0;
-		else return 1;
+		else return -1;
 	}
 	else if(f==1){
 		if(!raid4_valid(5)){
