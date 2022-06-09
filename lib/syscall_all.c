@@ -330,9 +330,11 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	e->env_ipc_from=curenv->env_id;
 	e->env_ipc_value=value;
 	if(srcva!=0){
+		//printf("in seed%x  %x\n",srcva,e->env_ipc_dstva);
 		p=page_lookup(curenv->env_pgdir,srcva,NULL);
 		if(p==NULL||e->env_ipc_dstva>=UTOP)return -1;
 		if(r=page_insert(e->env_pgdir,p,e->env_ipc_dstva,perm))return r;
+		//printf("success??%s    %s",srcva,e->env_ipc_dstva);
 	}
 	e->env_status=ENV_RUNNABLE;
 	e->env_ipc_perm=perm;

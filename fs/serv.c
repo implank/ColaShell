@@ -18,7 +18,7 @@ struct Open {
 // Max number of open files in the file system at once
 #define MAXOPEN			1024
 #define FILEVA 			0x60000000
-
+char anslist[1024];
 // initialize to force into data section
 struct Open opentab[MAXOPEN] = { { 0, 0, 1 } };
 
@@ -142,7 +142,28 @@ serve_open(u_int envid, struct Fsreq_open *rq)
 	else 
 		ipc_send(envid, 0, (u_int)o->o_ff, PTE_V | PTE_R | PTE_LIBRARY);
 }
-
+void serve_list(u_int envid,struct Fsreq_list *rq){
+	u_char path[MAXPATHLEN];
+	struct File *f;
+	struct Filefd *ff;
+	int fileid;
+	int r;
+	struct Open *o;
+	user_bcopy(rq->req_path, path, MAXPATHLEN);
+	path[MAXPATHLEN - 1] = 0;
+	if ((r = file_open((char *)path, &f)) < 0) {
+	//	user_panic("file_open failed: %d, invalid path: %s", r, path);
+		ipc_send(envid, r, 0, 0);
+		return ;
+	}
+	syscall_mem_alloc(0,0x7f3fc000,PTE_V | PTE_R | PTE_LIBRARY);
+	char *ans=0x7f3fc000;
+	user_bzero(ans,BY2PG);
+	int l=dir_list(f,ans);
+	// writef("len:%s %d\n",ans,l);
+	//writef("fuck::%s\n%x\n",ans,ans);
+	ipc_send(envid, 0, (u_int)ans, PTE_V | PTE_R | PTE_LIBRARY);
+}
 void
 serve_map(u_int envid, struct Fsreq_map *rq)
 {
@@ -266,6 +287,9 @@ serve(void)
 		}
 
 		switch (req) {
+			case FSREQ_LIST:
+				serve_list(whom,(struct Fsreq_list *)REQVA);
+				break;
 			case FSREQ_OPEN:
 				serve_open(whom, (struct Fsreq_open *)REQVA);
 				break;

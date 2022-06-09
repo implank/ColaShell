@@ -436,6 +436,29 @@ int dir_lookup(struct File *dir, char *name, struct File **file){
 	}
 	return -E_NOT_FOUND;
 }
+int dir_list(struct File *dir, char *name){
+	int r;
+	u_int i, j, nblock;
+	void *blk;
+	struct File *f;
+	nblock=dir->f_size/BY2BLK;
+	int len=0;
+	for (i = 0; i < nblock; i++) {
+		if(r=file_get_block(dir,i,&blk))return r;
+		f=blk;
+		for(j=0;j<FILE2BLK;j++){
+			if(f[j].f_name[0]!='\0'){
+				int slen=strlen(f[j].f_name);
+				strcpy(name+len,f[j].f_name);
+				len+=slen;
+				strcpy(name+len," ");
+				len++;
+			}
+		}
+	}
+	// writef("%s %d\n",name,len);
+	return len;
+}
 // Overview:
 //	Alloc a new File structure under specified directory. Set *file
 //	to point at a free File structure in dir.

@@ -19,6 +19,13 @@ struct Dev devfile = {
 	.dev_close =	file_close,
 	.dev_stat =	file_stat,
 };
+
+int list_dir(const char *path, char* ans){
+	int r=0;
+	char *tmp;
+	if(r=fsipc_list(path,ans))return r;
+	return 0;
+}
 // Overview:
 //	Open a file (or directory).
 //
