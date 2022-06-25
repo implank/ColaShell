@@ -119,7 +119,6 @@ static void duppage(u_int envid, u_int pn){
 			perm|=PTE_COW;
 			flag=1;
 		}
-			//syscall_mem_map(0,addr,0,addr,perm);
 	}
 	syscall_mem_map(0,addr,envid,addr,perm);
 	if(flag)syscall_mem_map(0,addr,0,addr,perm);

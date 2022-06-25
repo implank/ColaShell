@@ -98,16 +98,38 @@ int usr_is_elf_format(u_char *binary){
     return 0;
 }
 
-int 
-usr_load_elf(int fd , Elf32_Phdr *ph, int child_envid){
-	//Hint: maybe this function is useful 
-	//      If you want to use this func, you should fill it ,it's not hard
+int usr_load_elf(int fd , Elf32_Phdr *ph, int child_envid){
+	u_long va=ph->p_vaddr;
+	u_long sgsize=ph->p_memsz;
+	u_long bin_size=ph->p_filesz;
+	u_char *blk;
+	u_char *tmp=USTACKTOP;
+	u_long i;
+	int r=0;
+	int ret;
+	u_long offset=va-ROUNDDOWN(va,BY2PG);
+	if(ret=read_map(fd,ph->p_offset,&blk))return ret;
+	if(offset){
+		if(ret=syscall_mem_alloc(child_envid,va,PTE_R|PTE_V))return ret;
+		if(ret=syscall_mem_map(child_envid,va,0,tmp,PTE_R|PTE_V))return ret;
+		user_bcopy(blk,tmp+offset,r=MIN(BY2PG-offset,bin_size));
+		if(ret=syscall_mem_unmap(0,tmp))return ret;
+	}
+	for(i=r;i<bin_size;i+=BY2PG){
+		if(ret=syscall_mem_alloc(child_envid,va+i,PTE_R|PTE_V))return ret;
+		if(ret=syscall_mem_map(child_envid,va+i,0,tmp,PTE_R|PTE_V))return ret;
+		user_bcopy(blk + i, tmp, MIN(BY2PG, bin_size - i));
+		if(ret=syscall_mem_unmap(0,tmp))return ret;
+	}
+	while(i<sgsize) {
+		if(ret=syscall_mem_alloc(child_envid,va+i,PTE_R|PTE_V))return ret;
+		i+=BY2PG;
+	}
 	return 0;
 }
 
-int spawn(char *prog, char **argv)
-{
-	u_char elfbuf[512];
+int spawn(char *prog, char **argv){
+	u_char *elfbuf;
 	int r;
 	int fd;
 	u_int child_envid;
@@ -124,45 +146,55 @@ int spawn(char *prog, char **argv)
 	}
 	// Your code begins here
 	// Before Step 2 , You had better check the "target" spawned is a execute bin 
+	fd=r;
+	elfbuf=INDEX2DATA(fd);
+	if(!usr_is_elf_format(elfbuf)){
+		user_panic("target not a execute bin");
+		return -E_INVAL;
+	}
 	// Step 2: Allocate an env (Hint: using syscall_env_alloc())
+	if(r=syscall_env_alloc()<0)return r;
+	child_envid=r;
 	// Step 3: Using init_stack(...) to initialize the stack of the allocated env
+	init_stack(child_envid,argv,&esp);
 	// Step 3: Map file's content to new env's text segment
-	//        Hint 1: what is the offset of the text segment in file? try to use objdump to find out.
-	//        Hint 2: using read_map(...)
-	//		  Hint 3: Important!!! sometimes ,its not safe to use read_map ,guess why 
+	// Hint 1: what is the offset of the text segment in file? try to use objdump to find out.
+	// Hint 2: using read_map(...)
+	// Hint 3: Important!!! sometimes ,its not safe to use read_map ,guess why 
 	//				  If you understand, you can achieve the "load APP" with any method
 	// Note1: Step 1 and 2 need sanity check. In other words, you should check whether
 	//       the file is opened successfully, and env is allocated successfully.
 	// Note2: You can achieve this func in any way ，remember to ensure the correctness
 	//        Maybe you can review lab3 
 	// Your code ends here
+	size=((struct Filefd*)INDEX2FD(fd))->f_file.f_size;
+	if(size<4)return -E_INVAL;
+	elf=elfbuf;
+	ph=elf+elf->e_phoff;
+	for(i=0;i<elf->e_phnum;++i){
+		if(ph->p_type==PT_LOAD){
+			if(r=usr_load_elf(fd,ph,child_envid))return r;
+		}
+		ph++;
+	}
 
 	struct Trapframe *tf;
 	writef("\n::::::::::spawn size : %x  sp : %x::::::::\n",size,esp);
 	tf = &(envs[ENVX(child_envid)].env_tf);
 	tf->pc = UTEXT;
 	tf->regs[29]=esp;
-
-
 	// Share memory
 	u_int pdeno = 0;
 	u_int pteno = 0;
 	u_int pn = 0;
 	u_int va = 0;
-	for(pdeno = 0;pdeno<PDX(UTOP);pdeno++)
-	{
-		if(!((* vpd)[pdeno]&PTE_V))
-			continue;
-		for(pteno = 0;pteno<=PTX(~0);pteno++)
-		{
+	for(pdeno = 0;pdeno<PDX(UTOP);pdeno++){
+		if(!((* vpd)[pdeno]&PTE_V))continue;
+		for(pteno = 0;pteno<=PTX(~0);pteno++){
 			pn = (pdeno<<10)+pteno;
-			if(((* vpt)[pn]&PTE_V)&&((* vpt)[pn]&PTE_LIBRARY))
-			{
+			if(((* vpt)[pn]&PTE_V)&&((* vpt)[pn]&PTE_LIBRARY)){
 				va = pn*BY2PG;
-
-				if((r = syscall_mem_map(0,va,child_envid,va,(PTE_V|PTE_R|PTE_LIBRARY)))<0)
-				{
-
+				if((r = syscall_mem_map(0,va,child_envid,va,(PTE_V|PTE_R|PTE_LIBRARY)))<0){
 					writef("va: %x   child_envid: %x   \n",va,child_envid);
 					user_panic("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 					return r;
@@ -170,15 +202,12 @@ int spawn(char *prog, char **argv)
 			}
 		}
 	}
-
-
 	if((r = syscall_set_env_status(child_envid, ENV_RUNNABLE)) < 0)
 	{
 		writef("set child runnable is wrong\n");
 		return r;
 	}
 	return child_envid;		
-
 }
 
 int
