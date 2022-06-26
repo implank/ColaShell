@@ -148,12 +148,12 @@ int spawn(char *prog, char **argv){
 	// Before Step 2 , You had better check the "target" spawned is a execute bin 
 	fd=r;
 	elfbuf=INDEX2DATA(fd);
-	if(!usr_is_elf_format(elfbuf)){
+	if(usr_is_elf_format(elfbuf)==0){
 		user_panic("target not a execute bin");
 		return -E_INVAL;
 	}
 	// Step 2: Allocate an env (Hint: using syscall_env_alloc())
-	if(r=syscall_env_alloc()<0)return r;
+	if((r=syscall_env_alloc())<0)return r;
 	child_envid=r;
 	// Step 3: Using init_stack(...) to initialize the stack of the allocated env
 	init_stack(child_envid,argv,&esp);
@@ -170,7 +170,7 @@ int spawn(char *prog, char **argv){
 	size=((struct Filefd*)INDEX2FD(fd))->f_file.f_size;
 	if(size<4)return -E_INVAL;
 	elf=elfbuf;
-	ph=elf+elf->e_phoff;
+	ph=elfbuf+elf->e_phoff;
 	for(i=0;i<elf->e_phnum;++i){
 		if(ph->p_type==PT_LOAD){
 			if(r=usr_load_elf(fd,ph,child_envid))return r;

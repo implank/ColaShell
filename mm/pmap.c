@@ -599,6 +599,7 @@ void pageout(int va, int context)
 	}
 
 	if (va < 0x10000) {
+		printf("%b\n",curenv->env_id);
 		panic("^^^^^^TOO LOW^^^^^^^^^");
 	}
 
