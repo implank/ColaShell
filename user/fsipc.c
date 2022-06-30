@@ -26,6 +26,14 @@ static int fsipc(u_int type, void *fsreq, u_int dstva, u_int *perm){
 	return ipc_recv(&whom, dstva, perm);
 }
 
+int fsipc_create(const char* path, int type){
+	struct Fsreq_create *req;
+	req = (struct Fsreq_create*) fsipcbuf;
+	req->type = type;
+	strcpy((char*) req->req_path, path);
+	return fsipc(FSREQ_CREATE, req, 0, 0);
+}
+
 // Overview:
 //	Send file-open request to the file server. Includes path and
 //	omode in request, sets *fileid and *size from reply.

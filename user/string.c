@@ -50,7 +50,15 @@ memcpy(void *destaddr, void const *srcaddr, u_int len)
 
 	return destaddr;
 }
-
+char *strcat(char *dst, const char *src)
+{
+	char *ret = dst;
+	while (*ret)
+		ret++;
+	while ((*ret++ = *src++) != 0)
+		;
+	return dst;
+}
 
 int
 strcmp(const char *p, const char *q)

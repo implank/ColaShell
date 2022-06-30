@@ -234,10 +234,21 @@ serve_dirty(u_int envid, struct Fsreq_dirty *rq)
 	ipc_send(envid, 0, 0, 0);
 }
 
-void
-serve_sync(u_int envid)
-{
+void serve_sync(u_int envid){
 	fs_sync();
+	ipc_send(envid, 0, 0, 0);
+}
+
+void serve_create(u_int envid,struct Fsreq_create *rq){
+	writef("serve_create: %s\n", rq->req_path);
+	int r;
+	char *path = rq->req_path;
+	struct File *file;
+	if((r=file_create(path,&file))<0){
+		ipc_send(envid, r, 0, 0);
+		return;
+	}
+	file->f_type = rq->type;
 	ipc_send(envid, 0, 0, 0);
 }
 
@@ -287,6 +298,10 @@ serve(void)
 				serve_sync(whom);
 				break;
 
+			case FSREQ_CREATE:
+				serve_create(whom, (struct Fsreq_create *)REQVA);
+				break;
+				
 			default:
 				writef("Invalid request code %d from %08x\n", whom, req);
 				break;

@@ -19,6 +19,12 @@ struct Dev devfile = {
 	.dev_close =	file_close,
 	.dev_stat =	file_stat,
 };
+
+int create(const char* path, int type){
+	return fsipc_create(path, type);
+}
+
+
 // Overview:
 //	Open a file (or directory).
 //

@@ -31,6 +31,9 @@ USERAPPS :=  $(user_dir)/num.b  \
 			 $(user_dir)/ls.b \
 			 $(user_dir)/sh.b  \
 			 $(user_dir)/cat.b \
+			 $(user_dir)/mkdir.b \
+			 $(user_dir)/touch.b \
+			 $(user_dir)/tree.b \
 		 $(user_dir)/testptelibrary.b
 
 

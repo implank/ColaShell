@@ -138,10 +138,18 @@ int spawn(char *prog, char **argv){
 	u_int esp;
 	Elf32_Ehdr* elf;
 	Elf32_Phdr* ph;
+	int len=strlen(prog);
+	char _prog[MAXNAMELEN];
+	strcpy(_prog,prog);
+	if(len<2||_prog[len-1]!='b'){
+		strcat(_prog,".b");
+	}
 	// Note 0: some variable may be not used,you can cancel them as you like
 	// Step 1: Open the file specified by `prog` (prog is the path of the program)
-	if((r=open(prog, O_RDONLY))<0){
-		user_panic("spawn ::open line 102 RDONLY wrong !\n");
+	if((r=open(_prog, O_RDONLY))<0){
+		//user_panic("spawn ::open line 102 RDONLY wrong !\n");
+		_prog[len]=0;
+		writef("command [%s] is not found.\n", _prog);
 		return r;
 	}
 	// Your code begins here
