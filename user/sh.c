@@ -83,6 +83,7 @@ runcmd(char *s)
 	char *argv[MAXARGS], *t;
 	int argc, c, i, r, p[2], fd, rightpipe;
 	int fdnum;
+	int hang=0;
 	rightpipe = 0;
 	gettoken(s, 0);
 again:
@@ -92,6 +93,9 @@ again:
 		switch(c){
 		case 0:
 			goto runit;
+		case '&':
+			hang=1;
+			break;
 		case 'w':
 			if(argc == MAXARGS){
 				writef("too many arguments\n");
@@ -179,14 +183,29 @@ runit:
 		writef("spawn %s: %e\n", argv[0], r);
 	close_all();
 	if (r >= 0) {
+		writef("hang:%d\n",hang);
 		if (debug_) writef("[%08x] WAIT %s %08x\n", env->env_id, argv[0], r);
-		wait(r);
+		if(!hang)
+			wait(r);
+		else
+		{
+			writef("\x1b[33m[%08x]\x1b[0m\t", r);
+			for (i = 0; i < argc; ++i)
+				writef("%s ", argv[i]);
+			writef("\n");
+			int pid = fork();
+			if (pid == 0)
+			{
+				wait(r);
+				writef("\x1b[33m[%08x]\x1b[35m\tDone\x1b[0m\n", r);
+				exit();
+			}
+		}
 	}
 	if (rightpipe) {
 		if (debug_) writef("[%08x] WAIT right-pipe %08x\n", env->env_id, rightpipe);
 		wait(rightpipe);
 	}
-
 	exit();
 }
 
@@ -202,7 +221,7 @@ readline(char *buf, u_int n)
 				writef("read error: %e", r);
 			exit();
 		}
-		if(buf[i] == '\b'){
+		if(buf[i] == 127){
 			if(i > 0)
 				i -= 2;
 			else
