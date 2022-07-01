@@ -2,11 +2,10 @@
 void print_tab(int num){
 	int i;
 	for(i=0;i<num;i++){
-		fwritef(1,"\t");
+		fwritef(1,"    ");
 	}
 }
-void gettree(int depth, char *path) 
-{   
+void gettree(int depth, char *path) {
 	struct Fd* fd;
 	struct Filefd* fileFd;
 	int i;

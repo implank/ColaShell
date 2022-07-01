@@ -83,7 +83,7 @@ int sys_env_destroy(int sysno, u_int envid){
 	if ((r = envid2env(envid, &e, 1)) < 0) {
 		return r;
 	}
-	printf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
+	// printf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
 	env_destroy(e);
 	return 0;
 }

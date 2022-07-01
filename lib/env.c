@@ -253,7 +253,7 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
 	int r=0;
 	Pde* pgdir=env->env_pgdir;
 	u_long offset = va - ROUNDDOWN(va, BY2PG);
-	printf("in icode_mapper:va:%x va+sgsize:%x\n",va,va+sgsize);
+	// printf("in icode_mapper:va:%x va+sgsize:%x\n",va,va+sgsize);
 	/* Step 1: load all content of bin into memory. */
 	if(offset){
 		if((p=page_lookup(pgdir,va,NULL))==0){
@@ -360,7 +360,7 @@ void env_free(struct Env *e){
 	Pte *pt;
 	u_int pdeno, pteno, pa;
 	/* Hint: Note the environment's demise.*/
-	printf("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+	// printf("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 	/* Hint: Flush all mapped pages in the user portion of the address space */
 	for (pdeno = 0; pdeno < PDX(UTOP); pdeno++) {
 		/* Hint: only look at mapped page tables. */
@@ -409,7 +409,7 @@ void env_destroy(struct Env *e){
 		bcopy((void *)KERNEL_SP - sizeof(struct Trapframe),
 				(void *)TIMESTACK - sizeof(struct Trapframe),
 				sizeof(struct Trapframe));
-		printf("i am killed ... \n");
+		// printf("i am killed ... \n");
 		sched_yield();
 	}
 }

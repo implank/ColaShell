@@ -183,7 +183,7 @@ runit:
 		writef("spawn %s: %e\n", argv[0], r);
 	close_all();
 	if (r >= 0) {
-		writef("hang:%d\n",hang);
+		// writef("hang:%d\n",hang);
 		if (debug_) writef("[%08x] WAIT %s %08x\n", env->env_id, argv[0], r);
 		if(!hang)
 			wait(r);
@@ -284,7 +284,7 @@ umain(int argc, char **argv)
 		interactive = iscons(0);
 	for(;;){
 		if (interactive)
-			fwritef(1, "\n$ ");
+			fwritef(1, "\n\x1b[32m$\x1b[0m ");
 		readline(buf, sizeof buf);
 		
 		if (buf[0] == '#')
