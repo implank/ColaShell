@@ -118,8 +118,13 @@ serve_open(u_int envid, struct Fsreq_open *rq)
 	// Open the file.
 	if ((r = file_open((char *)path, &f)) < 0) {
 	//	user_panic("file_open failed: %d, invalid path: %s", r, path);
-		ipc_send(envid, r, 0, 0);
-		return ;
+		if(r==-E_NOT_FOUND&&(rq->req_omode&O_CREAT)){
+			file_create((char *)path,&f);
+		}
+		else {
+			ipc_send(envid, r, 0, 0);
+			return ;
+		}
 	}
 
 	// Save the file pointer.
@@ -132,8 +137,11 @@ serve_open(u_int envid, struct Fsreq_open *rq)
 	o->o_mode = rq->req_omode;
 	ff->f_fd.fd_omode = o->o_mode;
 	ff->f_fd.fd_dev_id = devfile.dev_id;
-
-	ipc_send(envid, 0, (u_int)o->o_ff, PTE_V | PTE_R | PTE_LIBRARY);
+	
+	if(rq->req_omode&O_ALONE)
+		ipc_send(envid, 0, (u_int)o->o_ff, PTE_V | PTE_R );
+	else 
+		ipc_send(envid, 0, (u_int)o->o_ff, PTE_V | PTE_R | PTE_LIBRARY);
 }
 
 void
@@ -240,7 +248,7 @@ void serve_sync(u_int envid){
 }
 
 void serve_create(u_int envid,struct Fsreq_create *rq){
-	writef("serve_create: %s\n", rq->req_path);
+	// writef("serve_create: %s\n", rq->req_path);
 	int r;
 	char *path = rq->req_path;
 	struct File *file;

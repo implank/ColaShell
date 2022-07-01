@@ -33,6 +33,23 @@ int _gettoken(char *s, char **p1, char **p2){
 	//	if (debug_ > 1) writef("EOL\n");
 		return 0;
 	}
+	if (*s == '"'){
+		*p1 = s + 1;
+		s++;
+		while (*s && *s != '"')
+			s++;
+		if (*s == 0)
+		{
+			writef("\" does not match\n");
+			return -1;
+		}
+		*s = 0;
+		s++;
+		while (*s && !strchr(WHITESPACE SYMBOLS, *s))
+			s++;
+		*p2 = s;
+		return 'w';
+	}
 	if(strchr(SYMBOLS, *s)){
 		t = *s;
 		*p1 = s;
@@ -70,7 +87,10 @@ void runcmd(char *s){
 	char *argv[MAXARGS], *t;
 	int argc, c, i, r, p[2], fd, rightpipe;
 	int fdnum;
+	int buf_len=0;
 	int hang=0;
+	int pid;
+	struct Stat state;
 	rightpipe = 0;
 	gettoken(s, 0);
 again:
@@ -95,6 +115,15 @@ again:
 				writef("syntax error: < not followed by word\n");
 				exit();
 			}
+			r=stat(t,&state);
+			if(r<0){
+				writef("cannot open file\n");
+				exit();
+			}
+			if(state.st_isdir){
+				writef("specified path should be file\n");
+				exit();
+			}
 			fdnum=open(t,O_RDONLY);
 			dup(fdnum,0);
 			close(fdnum);
@@ -104,7 +133,12 @@ again:
 				writef("syntax error: > not followed by word\n");
 				exit();
 			}
-			fdnum=open(t,O_WRONLY);
+			r=stat(t, &state);
+			if(r>=0&&state.st_isdir){
+				writef("specified path should be file\n");
+				exit();
+			}
+			fdnum=open(t,O_WRONLY|O_CREAT);
 			dup(fdnum,1);
 			close(fdnum);
 			break;
@@ -128,6 +162,23 @@ again:
 				goto runit;
 			}
 			// user_panic("| not implemented");
+			break;
+		case ';':
+			if ((pid=fork())==0){
+				hang=0;
+				goto runit;
+			}
+			wait(pid);
+			argc=0;
+			hang=0;
+			buf_len = 0;
+			rightpipe = 0;
+			do{
+				close(0);
+				if ((r = opencons()) < 0)
+					user_panic("opencons: %e", r);
+			} while (r != 0);
+			dup(0, 1);
 			break;
 		}
 	}
@@ -179,7 +230,7 @@ void
 readline(char *buf, u_int n)
 {
 	int i, r;
-
+	char tmp;
 	r = 0;
 	for(i=0; i<n; i++){
 		if((r = read(0, buf+i, 1)) != 1){
@@ -188,12 +239,40 @@ readline(char *buf, u_int n)
 			exit();
 		}
 		if(buf[i] == 127){
-			if(i > 0)
+			if(i > 0){
+				fwritef(1,"\x1b[0K");
 				i -= 2;
+			}
 			else
 				i = 0;
+		}else if(buf[i]=='\x1b'){
+			read(0,&tmp,1);
+			if(tmp!='[')
+				user_panic("\\x1b is not followed by '['");
+			read(0,&tmp,1);
+			if(tmp=='A'){
+				if(i)
+					fwritef(1, "\x1b[1B\x1b[%dD\x1b[K", i);
+				else
+					fwritef(1, "\x1b[1B");
+				// i = hist(buf, 1);
+			}
+			else if (tmp == 'B'){
+				if (i)
+					fwritef(1, "\x1b[1A\x1b[%dD\x1b[K", i);
+				else
+					fwritef(1, "\x1b[1A");
+				// i = hist(buf, 0);
+			}
+			else if (tmp == 'C'){
+				fwritef(1,"\x1b[1D\x1b[1D");
+			}
+			else if (tmp == 'D'){
+				fwritef(1,"\033[2C");
+			}
+			i--;
 		}
-		if(buf[i] == '\r' || buf[i] == '\n'){
+		else if(buf[i] == '\r' || buf[i] == '\n'){
 			buf[i] = 0;
 			return;
 		}

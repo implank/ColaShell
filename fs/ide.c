@@ -60,7 +60,7 @@ void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs){
 	int offset_end = offset_begin + nsecs * 0x200;
 	int offset = 0;
 	// DO NOT DELETE WRITEF !!!
-	writef("diskno: %d\n", diskno);
+	// writef("diskno: %d\n", diskno);
 	int tmp;
 	while (offset_begin + offset < offset_end) {
 		if(syscall_write_dev(src+offset,0x13004000,512))user_panic("Error occurred during write the IDE disk!\n");
