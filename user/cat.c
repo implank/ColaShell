@@ -19,17 +19,21 @@ void
 umain(int argc, char **argv)
 {
 	int f, i;
-
-	if(argc == 1)
+	struct Stat st;
+	if (argc == 1)
 		cat(0, "<stdin>");
-	else for(i=1; i<argc; i++){
-		f = open(argv[i], O_RDONLY);
-		if(f < 0)
-			user_panic("can't open %s: %e", argv[i], f);
-		else{
+	else
+		for (i = 1; i < argc; i++){
+			if (stat(argv[i],&st)<0){
+				writef("cannot open file: %s\n", argv[i]);
+				continue;
+			}
+			else if (st.st_isdir){
+				writef("specified path should be file\n");
+				continue;
+			}
+			f = open(argv[i], O_RDONLY);
 			cat(f, argv[i]);
 			close(f);
 		}
-	}
 }
-

@@ -18,21 +18,15 @@ int debug_ = 0;
 #define WHITESPACE " \t\r\n"
 #define SYMBOLS "<|>&;()"
 
-int
-_gettoken(char *s, char **p1, char **p2)
-{
+int _gettoken(char *s, char **p1, char **p2){
 	int t;
-
 	if (s == 0) {
 		//if (debug_ > 1) writef("GETTOKEN NULL\n");
 		return 0;
 	}
-
 	//if (debug_ > 1) writef("GETTOKEN: %s\n", s);
-
 	*p1 = 0;
 	*p2 = 0;
-
 	while(strchr(WHITESPACE, *s))
 		*s++ = 0;
 	if(*s == 0) {
@@ -59,13 +53,9 @@ _gettoken(char *s, char **p1, char **p2)
 	}
 	return 'w';
 }
-
-int
-gettoken(char *s, char **p1)
-{
+int gettoken(char *s, char **p1){
 	static int c, nc;
 	static char *np1, *np2;
-
 	if (s) {
 		nc = _gettoken(s, &np1, &np2);
 		return 0;
@@ -75,11 +65,8 @@ gettoken(char *s, char **p1)
 	nc = _gettoken(np2, &np1, &np2);
 	return c;
 }
-
 #define MAXARGS 16
-void
-runcmd(char *s)
-{
+void runcmd(char *s){
 	char *argv[MAXARGS], *t;
 	int argc, c, i, r, p[2], fd, rightpipe;
 	int fdnum;
@@ -108,12 +95,9 @@ again:
 				writef("syntax error: < not followed by word\n");
 				exit();
 			}
-			// Your code here -- open t for reading,
-			// dup it onto fd 0, and then close the fd you got.
 			fdnum=open(t,O_RDONLY);
 			dup(fdnum,0);
 			close(fdnum);
-			// user_panic("< redirection not implemented");
 			break;
 		case '>':
 			if(gettoken(0,&t)!='w'){
@@ -123,26 +107,8 @@ again:
 			fdnum=open(t,O_WRONLY);
 			dup(fdnum,1);
 			close(fdnum);
-			// Your code here -- open t for writing,
-			// dup it onto fd 1, and then close the fd you got.
-			// user_panic("> redirection not implemented");
 			break;
 		case '|':
-			// Your code here.
-			// 	First, allocate a pipe.
-			//	Then fork.
-			//	the child runs the right side of the pipe:
-			//		dup the read end of the pipe onto 0
-			//		close the read end of the pipe
-			//		close the write end of the pipe
-			//		goto again, to parse the rest of the command line
-			//	the parent runs the left side of the pipe:
-			//		dup the write end of the pipe onto 1
-			//		close the write end of the pipe
-			//		close the read end of the pipe
-			//		set "rightpipe" to the child envid
-			//		goto runit, to execute this piece of the pipeline
-			//			and then wait for the right side to finish
 			pipe(p);
 			if((r=fork())<0) {
 				writef(" | error\n");

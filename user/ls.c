@@ -11,8 +11,11 @@ ls(char *path, char *prefix)
 	int r;
 	struct Stat st;
 
-	if ((r=stat(path, &st)) < 0)
-		user_panic("stat %s: %e", path, r);
+	if ((r=stat(path, &st)) < 0){
+		// user_panic("stat %s: %e", path, r);
+		writef("file not found\n");
+		return ;
+	}
 	if (st.st_isdir && !flag['d'])
 		lsdir(path, prefix);
 	else
@@ -28,7 +31,7 @@ lsdir(char *path, char *prefix)
 	if ((fd = open(path, O_RDONLY)) < 0)
 		user_panic("open %s: %e", path, fd);
 	while ((n = readn(fd, &f, sizeof f)) == sizeof f)
-		if (f.f_name[0])
+		if (f.f_name[0]&&(flag['a']||f.f_name[0]!='.'))
 			ls1(prefix, f.f_type==FTYPE_DIR, f.f_size, f.f_name);
 	if (n > 0)
 		user_panic("short read in directory %s", path);
@@ -50,22 +53,16 @@ ls1(char *prefix, u_int isdir, u_int size, char *name)
 			sep = "";
 		fwritef(1, "%s%s", prefix, sep);
 	}
-	fwritef(1, "%s", name);
+	fwritef(1, isdir?"\x1b[34m%s\x1b[0m":"%s",name);
 	if(flag['F'] && isdir)
 		fwritef(1, "/");
-	fwritef(1, " ");
+	fwritef(1,flag['l']?"\n":" ");
 }
-
-void
-usage(void)
-{
+void usage(void){
 	fwritef(1, "usage: ls [-dFl] [file...]\n");
 	exit();
 }
-
-void
-umain(int argc, char **argv)
-{
+void umain(int argc, char **argv){
 	int i;
 
 	ARGBEGIN{
@@ -74,6 +71,7 @@ umain(int argc, char **argv)
 	case 'd':
 	case 'F':
 	case 'l':
+	case 'a':
 		flag[(u_char)ARGC()]++;
 		break;
 	}ARGEND
