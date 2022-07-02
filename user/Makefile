@@ -25,7 +25,10 @@ all: echo.x echo.b num.x num.b testptelibrary.b testptelibrary.x testarg.b testp
 	testbss.x testbss.b\
 	mkdir.x mkdir.b\
 	touch.x touch.b\
-	tree.x tree.b
+	tree.x tree.b\
+	history.x history.b\
+	clear.x clear.b\
+	rm.x rm.b
 
 %.x: %.b.c 
 	echo cc1 $< 

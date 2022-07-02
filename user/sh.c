@@ -51,6 +51,14 @@ int _gettoken(char *s, char **p1, char **p2){
 		return 'w';
 	}
 	if(strchr(SYMBOLS, *s)){
+		if(*s=='>'&&*(s+1)&&*(s+1)=='>'){
+			t=*s;
+			*p1=s;
+			*s=0;
+			s+=2;
+			*p2=s;
+			return 'a';
+		}
 		t = *s;
 		*p1 = s;
 		*s++ = 0;
@@ -142,6 +150,20 @@ again:
 			dup(fdnum,1);
 			close(fdnum);
 			break;
+		case 'a':
+			if(gettoken(0,&t)!='w'){
+				writef("syntax error: >> not followed by word\n");
+				exit();
+			}
+			r=stat(t,&state);
+			if(r>=0&&state.st_isdir){
+				writef("specified path should be file\n");
+				exit();
+			}
+			fdnum=open(t,O_WRONLY|O_CREAT|O_APPEND);
+			dup(fdnum,1);
+			close(fdnum);
+			break;
 		case '|':
 			pipe(p);
 			if((r=fork())<0) {
@@ -225,10 +247,114 @@ runit:
 	}
 	exit();
 }
+static int _hist = 0;
 
-void
-readline(char *buf, u_int n)
+static void save_cmd(char *buf)
 {
+	if (!*buf)
+		return;
+	_hist = 0;
+	int his = open(".history", O_APPEND | O_WRONLY | O_CREAT);
+	if (his < 0)
+	{
+		fwritef(1, "cannot open history\n");
+		return;
+	}
+	fwritef(his, "%s\n", buf);
+	close(his);
+}
+
+static int hist(char *buf, int up)
+{
+	static int last = 0;
+	static char history_info[4 * 1024 * 1024];
+	if (!_hist)
+	{
+		struct Stat state;
+		if (stat(".history", &state) < 0)
+			return 0;
+		int his = open(".history", O_RDONLY);
+		if (his < 0)
+			return 0;
+		read(his, history_info, state.st_size);
+		history_info[state.st_size] = 0;
+		close(his);
+	}
+	int oi, i, j, ofst;
+	if (_hist <= 1 && !up)
+	{
+		_hist = 0;
+		last = _hist == 1 ? up : 0;
+		return 0;
+	}
+	if (!last)
+	{
+		ofst = _hist + (up ? 1 : -1);
+	}
+	else
+	{
+		if (last > 0)
+		{
+			if (up)
+				return 0;
+			else
+				ofst = _hist;
+		}
+		else
+		{
+			if (!up)
+				return 0;
+			else
+				ofst = _hist;
+		}
+	}
+	// writef("hist : %d\tofst : %d\n", _hist, ofst);
+	for (j = 0; history_info[j] && ofst != 0; ++j)
+	{
+		if (history_info[j] == '\n')
+		{
+			ofst--;
+		}
+	}
+	if (ofst != 0)
+	{
+		last = up ? 1 : -1;
+		return 0;
+	}
+
+	for (oi = i = 0; history_info[j]; ++j)
+	{
+		if (history_info[j] == '\n')
+		{
+			oi = i;
+			while (history_info[i] != '\n')
+				++i;
+			++i;
+		}
+	}
+	char *ptr = buf;
+	for (;; i++)
+	{
+		if (history_info[i] == '\n')
+		{
+			*ptr = 0;
+			break;
+		}
+		*ptr = history_info[i];
+		++ptr;
+	}
+	fwritef(1, "%s", buf);
+	if (!last)
+	{
+		if (up)
+			_hist++;
+		else
+			_hist--;
+	}
+	last = 0;
+	return ptr - buf;
+}
+void readline(char *buf, u_int n){
 	int i, r;
 	char tmp;
 	r = 0;
@@ -240,7 +366,7 @@ readline(char *buf, u_int n)
 		}
 		if(buf[i] == 127){
 			if(i > 0){
-				fwritef(1,"\x1b[0K");
+				fwritef(1,"\x1b[1D\x1b[0K");
 				i -= 2;
 			}
 			else
@@ -255,14 +381,14 @@ readline(char *buf, u_int n)
 					fwritef(1, "\x1b[1B\x1b[%dD\x1b[K", i);
 				else
 					fwritef(1, "\x1b[1B");
-				// i = hist(buf, 1);
+				i = hist(buf, 1);
 			}
 			else if (tmp == 'B'){
 				if (i)
 					fwritef(1, "\x1b[1A\x1b[%dD\x1b[K", i);
 				else
 					fwritef(1, "\x1b[1A");
-				// i = hist(buf, 0);
+				i = hist(buf, 0);
 			}
 			else if (tmp == 'C'){
 				fwritef(1,"\x1b[1D\x1b[1D");
@@ -278,23 +404,15 @@ readline(char *buf, u_int n)
 		}
 	}
 	writef("line too long\n");
-	while((r = read(0, buf, 1)) == 1 && buf[0] != '\n')
-		;
+	while((r = read(0, buf, 1)) == 1 && buf[0] != '\n');
 	buf[0] = 0;
 }	
-
 char buf[1024];
-
-void
-usage(void)
-{
+void usage(void){
 	writef("usage: sh [-dix] [command-file]\n");
 	exit();
 }
-
-void
-umain(int argc, char **argv)
-{
+void umain(int argc, char **argv){
 	int r, interactive, echocmds;
 	interactive = '?';
 	echocmds = 0;
@@ -331,7 +449,8 @@ umain(int argc, char **argv)
 		if (interactive)
 			fwritef(1, "\n\x1b[32m$\x1b[0m ");
 		readline(buf, sizeof buf);
-		
+		if(!*buf)continue;
+		save_cmd(buf);
 		if (buf[0] == '#')
 			continue;
 		if (echocmds)
