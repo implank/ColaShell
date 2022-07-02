@@ -397,3 +397,69 @@ int sys_read_dev(int sysno, u_int va, u_int dev, u_int len){
 	bcopy(0xA0000000+dev,va,len);
 	return 0;
 }
+
+#define EV_MAX 256
+#define EV_NAMEMAXLEN 64
+#define EV_VALUEMAXLEN 256
+
+typedef struct {
+	char name[EV_NAMEMAXLEN];
+	char value[EV_VALUEMAXLEN];
+	u_int mode;
+	u_int sh_id;
+}EnvVar;
+
+static int ev_cnt=0;
+static EnvVar env_var[EV_MAX];
+
+int __find_env_var(char *name,u_int sh_id){
+	int i;
+	for(i=0;i<ev_cnt;i++){
+		if(strcmp(name,env_var[i].name)==0
+			&&((env_var[i].mode&EV_GLOBAL)||env_var[i].sh_id==sh_id)){
+			return i;
+		}
+	}
+	return -E_EV_NOT_FOUND;
+}
+int sys_set_env_var(int sysno,u_int name,u_int value,u_int mode,u_int sh_id){
+	int idx=__find_env_var((char*)name,sh_id);
+	if(value==0){
+		if(idx<0)return -E_EV_NOT_FOUND;
+		env_var[idx].name[0]=0;
+	}
+	else {
+		if(idx<0){
+			if(ev_cnt==EV_MAX)return -E_EV_FULL;
+			idx=ev_cnt++;
+		}
+		if(idx>=0&&(env_var[idx].mode&EV_RDONLY)){
+			return -E_EV_RDONLY;
+		}
+		memcpy(env_var[idx].name,(char*)name,EV_NAMEMAXLEN);
+		memcpy(env_var[idx].value,(char*)value,EV_VALUEMAXLEN);
+		env_var[idx].mode=mode;
+		env_var[idx].sh_id=sh_id;
+	}
+	return 0;
+}
+int sys_get_env_var(int sysno,u_int name,u_int value,u_int sh_id){
+	int i=__find_env_var((char*)name,sh_id);
+	if(i<0)return -E_EV_NOT_FOUND;
+	memcpy((char*)value,env_var[i].value,EV_VALUEMAXLEN);
+	return 0;
+}
+int sys_get_env_var_list(int sysno,u_int list,u_int sh_id){
+	EnvVar *l=(EnvVar*)list;
+	int i,j;
+	for(i=0,j=0;i<ev_cnt;++i){
+		if(env_var[i].name[0]
+				&&((env_var[i].mode&EV_GLOBAL)||env_var[i].sh_id==sh_id)){
+			memcpy(l[j].name,env_var[i].name,EV_NAMEMAXLEN);
+			memcpy(l[j].value,env_var[i].value,EV_VALUEMAXLEN);
+			l[j].mode=env_var[i].mode;
+			j++;
+		}
+	}
+	return 0;
+}

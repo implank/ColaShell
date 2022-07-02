@@ -18,6 +18,9 @@
 #define ENV_RUNNABLE		1
 #define ENV_NOT_RUNNABLE	2
 
+#define EV_RDONLY 1
+#define EV_GLOBAL 2
+
 struct Env {
 	struct Trapframe env_tf;        // Saved registers
 	LIST_ENTRY(Env) env_link;       // Free list

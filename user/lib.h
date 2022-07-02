@@ -14,6 +14,23 @@ extern void exit();
 
 extern struct Env *env;
 
+#define EV_MAX 256
+#define EV_NAMEMAXLEN 64
+#define EV_VALUEMAXLEN 256
+
+#define EV_RDONLY 1
+#define EV_GLOBAL 2
+
+#define E_EV_NOT_FOUND 13
+#define E_EV_FULL	14
+#define E_EV_RDONLY 15
+
+typedef struct {
+	char name[EV_NAMEMAXLEN];
+	char value[EV_VALUEMAXLEN];
+	u_int mode;
+	u_int sh_id;
+}EnvVar;
 
 #define USED(x) (void)(x)
 //////////////////////////////////////////////////////printf
@@ -67,6 +84,9 @@ void syscall_ipc_recv(u_int dstva);
 int syscall_cgetc();
 int syscall_write_dev(u_int va,u_int dev,u_int offset);
 int syscall_read_dev(u_int va,u_int dev,u_int offset);
+int syscall_set_env_var(char *name, char *value, int mode,u_int sh_id);
+int syscall_get_env_var(char *name, char *value,u_int sh_id);
+int syscall_get_env_var_list(EnvVar *list,u_int sh_id);
 
 // string.c
 int strlen(const char *s);

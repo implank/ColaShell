@@ -2,6 +2,7 @@
 #include <args.h>
 
 int debug_ = 0;
+static u_int sh_id=0;
 
 //
 // get the next token from string s
@@ -50,6 +51,15 @@ int _gettoken(char *s, char **p1, char **p2){
 		*p2 = s;
 		return 'w';
 	}
+	if(*s=='$'&&*(s+1)&&!strchr(WHITESPACE,*(s+1))){
+		*p1=s+1;
+		s++;
+		while(*s&&!strchr(WHITESPACE,*s))
+			s++;
+		*s=0;
+		*p2=s+1;
+		return '$';
+	}
 	if(strchr(SYMBOLS, *s)){
 		if(*s=='>'&&*(s+1)&&*(s+1)=='>'){
 			t=*s;
@@ -90,9 +100,64 @@ int gettoken(char *s, char **p1){
 	nc = _gettoken(np2, &np1, &np2);
 	return c;
 }
+int call_inner_instr(int argc, char **argv){
+	int r;
+	EnvVar list[EV_MAX]={0};
+	if(strcmp(argv[0],"clear")==0){
+		writef("\x1b[2J\x1b[H");
+		return 1;
+	}
+	if(strcmp(argv[0],"unset")==0){
+		if(argc!=2)fwritef(1,"usage: unset [varname]\n");
+		else{
+			r=syscall_set_env_var(argv[1],0,0,sh_id);
+			if(r<0){
+				fwritef(1,"env var [%s] don't exist\n",argv[1]);
+			}
+		}
+		return 1;
+	}
+	if(strcmp(argv[0],"declare")==0){
+		if(argc==1){
+			syscall_get_env_var_list(list,sh_id);
+			int i=0;
+			while(list[i].name[0]){
+				fwritef(1,"name: \x1b[36m%-16s\x1b[0m",list[i].name);
+				fwritef(1,"value: \x1b[35m%-10s\x1b[0m",list[i].value);
+				fwritef(1,"mode: ");
+				fwritef(1,list[i].mode&EV_RDONLY?"-":"w");
+				fwritef(1,list[i].mode&EV_GLOBAL?"x":"-");
+				fwritef(1,"\n");
+				i++; 
+			}
+			return 1;
+		}else {
+			int exargs=0;
+			int mode=0;
+			if(argv[1][0]=='-'){
+				exargs=1;
+				int i;
+				for(i=1;argv[1][i];++i){
+					if(argv[1][i]=='r')mode|=EV_RDONLY;
+					if(argv[1][i]=='x')mode|=EV_GLOBAL;
+				}
+			}
+			r=syscall_set_env_var(argv[exargs+1],argv[exargs+2],mode,sh_id);
+			if(r==-E_EV_RDONLY){
+				fwritef(1,"env var [%s] is readonly\n",argv[exargs+1]);
+			}
+			if(r==-E_EV_FULL){
+				fwritef(1,"env var reaches the limit\n");
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
 #define MAXARGS 16
 void runcmd(char *s){
 	char *argv[MAXARGS], *t;
+	char buf[MAXARGS][EV_VALUEMAXLEN];
 	int argc, c, i, r, p[2], fd, rightpipe;
 	int fdnum;
 	int buf_len=0;
@@ -117,6 +182,16 @@ again:
 				exit();
 			}
 			argv[argc++] = t;
+			break;
+		case '$':
+			if(argc==MAXARGS){
+				writef("too many arguments\n");
+				exit();
+			}
+			if(syscall_get_env_var(t,buf[buf_len],sh_id)<0)
+				argv[argc++]=t;
+			else
+				argv[argc++]=buf[buf_len++];
 			break;
 		case '<':
 			if(gettoken(0, &t) != 'w'){
@@ -211,15 +286,19 @@ runit:
 		return;
 	}
 	argv[argc] = 0;
-	if (1) {
+	if (debug_) {
 		writef("[%08x] SPAWN:", env->env_id);
 		for (i=0; argv[i]; i++)
 			writef(" %s", argv[i]);
 		writef("\n");
 	}
-
-	if ((r = spawn(argv[0], argv)) < 0)
+	if(call_inner_instr(argc,argv)){
+		exit();
+	}
+	if ((r = spawn(argv[0], argv)) < 0){
 		writef("spawn %s: %e\n", argv[0], r);
+		//exit();
+	}
 	close_all();
 	if (r >= 0) {
 		// writef("hang:%d\n",hang);
@@ -413,6 +492,7 @@ void usage(void){
 	exit();
 }
 void umain(int argc, char **argv){
+	sh_id=env->env_id;
 	int r, interactive, echocmds;
 	interactive = '?';
 	echocmds = 0;
@@ -447,7 +527,7 @@ void umain(int argc, char **argv){
 		interactive = iscons(0);
 	for(;;){
 		if (interactive)
-			fwritef(1, "\n\x1b[32m$\x1b[0m ");
+			fwritef(1,"\n\x1b[36m%d\x1b[0m\x1b[32m$\x1b[0m ",sh_id);
 		readline(buf, sizeof buf);
 		if(!*buf)continue;
 		save_cmd(buf);

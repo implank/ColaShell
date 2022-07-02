@@ -22,5 +22,8 @@
 #define SYS_cgetc		((__SYSCALL_BASE ) + (14 ) )
 #define SYS_write_dev		((__SYSCALL_BASE ) + (15) )
 #define SYS_read_dev		((__SYSCALL_BASE ) + (16) )
+#define SYS_set_env_var			((__SYSCALL_BASE ) + (17))
+#define SYS_get_env_var			((__SYSCALL_BASE ) + (18))
+#define SYS_get_env_var_list	((__SYSCALL_BASE ) + (19))
 
 #endif

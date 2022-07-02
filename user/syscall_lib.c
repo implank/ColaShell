@@ -52,3 +52,12 @@ int syscall_write_dev(u_int va,u_int dev,u_int offset){
 int syscall_read_dev(u_int va,u_int dev,u_int offset){
 	return msyscall(SYS_read_dev, va , dev , offset ,0,0);
 }
+int syscall_set_env_var(char *name, char *value, int mode,u_int sh_id){
+	return msyscall(SYS_set_env_var, name, value, mode, sh_id, 0);
+}
+int syscall_get_env_var(char *name, char *value,u_int sh_id){
+	return msyscall(SYS_get_env_var, name, value, sh_id, 0, 0);
+}
+int syscall_get_env_var_list(EnvVar *list,u_int sh_id){
+	return msyscall(SYS_get_env_var_list, list, sh_id, 0, 0, 0);
+}

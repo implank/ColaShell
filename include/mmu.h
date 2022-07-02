@@ -122,7 +122,11 @@
 #define E_FILE_EXISTS	11	// File already exists
 #define E_NOT_EXEC	12	// File not a valid executable
 
-#define MAXERROR 12
+#define E_EV_NOT_FOUND 13
+#define E_EV_FULL	14
+#define E_EV_RDONLY 15
+
+#define MAXERROR 15
 
 #ifndef __ASSEMBLER__
 
