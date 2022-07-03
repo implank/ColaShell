@@ -221,6 +221,7 @@ again:
 				writef("specified path should be file\n");
 				exit();
 			}
+			remove(t);
 			fdnum=open(t,O_WRONLY|O_CREAT);
 			dup(fdnum,1);
 			close(fdnum);
@@ -333,77 +334,47 @@ static void save_cmd(char *buf){
 	fwritef(his,"%s\n",buf);
 	close(his);
 }
-
 static int hist(char *buf,int up){
-	static int last=0;
-	static char history_info[4*1024*1024];
+	static char history[1000000];
+	struct Stat state;
+	int i,j,offset;
 	if(!newcmd){
-		struct Stat state;
 		if(stat(".history",&state)<0)return 0;
 		int his=open(".history",O_RDONLY);
 		if(his<0)return 0;
-		read(his,history_info,state.st_size);
-		history_info[state.st_size]=0;
+		read(his,history,state.st_size);
+		history[state.st_size]=0;
 		close(his);
 	}
-	int oi,i,j,offset;
-	if(newcmd <= 1 && !up){
+	if(newcmd<=1&&!up){
 		newcmd=0;
-		last=newcmd==1?up:0;
 		return 0;
 	}
-	if(!last){
-		offset=newcmd+(up?1:-1);
-	}
-	else{
-		if(last>0){
-			if(up)
-				return 0;
-			else
-				offset=newcmd;
-		}
-		else{
-			if(!up)
-				return 0;
-			else
-				offset=newcmd;
-		}
-	}
-	for(j=0;history_info[j]&&offset!=0;++j){
-		if(history_info[j]=='\n'){
+	offset=newcmd+(up?1:-1);
+	for(j=0;history[j]&&offset!=0;++j)
+		if(history[j]=='\n')
 			offset--;
-		}
-	}
-	if(offset!=0){
-		last=up?1:-1;
-		return 0;
-	}
-	for(oi=i=0;history_info[j];++j){
-		if(history_info[j]=='\n'){
-			oi=i;
-			while(history_info[i] != '\n')
-				++i;
+	for(i=0;history[j];++j)
+		if(history[j]=='\n'){
+			while(history[i]!='\n')++i;
 			++i;
 		}
-	}
-	char *ptr=buf;
-	for(;;i++){
-		if(history_info[i]=='\n'){
-			*ptr=0;
+	char *_buf=buf;
+	while(1){
+		if(history[i]=='\n'){
+			*_buf=0;
 			break;
 		}
-		*ptr=history_info[i];
-		++ptr;
+		*_buf=history[i];
+		_buf++;i++;
 	}
 	fwritef(1,"%s",buf);
-	if(!last){
-		if(up)
+	if(up){
+		if(!offset)
 			newcmd++;
-		else
-			newcmd--;
 	}
-	last=0;
-	return ptr - buf;
+	else newcmd--;
+	return _buf-buf;
 }
 void readline(char *buf,u_int n){
 	int i,r;
@@ -436,16 +407,10 @@ void readline(char *buf,u_int n){
 			}
 			else if(tmp=='B'){
 				if(i)
-					fwritef(1,"\x1b[1A\x1b[%dD\x1b[K",i);
+					fwritef(1,"\x1b[%dD\x1b[K",i);
 				else
-					fwritef(1,"\x1b[1A");
+					fwritef(1,"");
 				i=hist(buf,0);
-			}
-			else if(tmp=='C'){
-				fwritef(1,"\x1b[1D\x1b[1D");
-			}
-			else if(tmp=='D'){
-				fwritef(1,"\033[2C");
 			}
 			i--;
 		}
