@@ -28,7 +28,8 @@ all: echo.x echo.b num.x num.b testptelibrary.b testptelibrary.x testarg.b testp
 	tree.x tree.b\
 	history.x history.b\
 	clear.x clear.b\
-	rm.x rm.b
+	rm.x rm.b\
+	sum.x sum.b
 
 %.x: %.b.c 
 	echo cc1 $< 

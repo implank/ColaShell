@@ -446,7 +446,7 @@ int sys_set_env_var(int sysno,u_int name,u_int value,u_int mode,u_int sh_id){
 int sys_get_env_var(int sysno,u_int name,u_int value,u_int sh_id){
 	int i=__find_env_var((char*)name,sh_id);
 	if(i<0)return -E_EV_NOT_FOUND;
-	memcpy((char*)value,env_var[i].value,EV_VALUEMAXLEN);
+	memcpy((char*)value,env_var[i].value,EV_VALUEMAXLEN-1);
 	return 0;
 }
 int sys_get_env_var_list(int sysno,u_int list,u_int sh_id){

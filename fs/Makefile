@@ -37,6 +37,7 @@ USERAPPS :=  $(user_dir)/num.b  \
 			 $(user_dir)/history.b \
 			 $(user_dir)/clear.b \
 			 $(user_dir)/rm.b \
+			 $(user_dir)/sum.b \
 		 $(user_dir)/testptelibrary.b
 
 
