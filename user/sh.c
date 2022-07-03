@@ -122,11 +122,12 @@ int call_inner_instr(int argc, char **argv){
 			syscall_get_env_var_list(list,sh_id);
 			int i=0;
 			while(list[i].name[0]){
-				fwritef(1,"name: \x1b[36m%-16s\x1b[0m",list[i].name);
-				fwritef(1,"value: \x1b[35m%-10s\x1b[0m",list[i].value);
-				fwritef(1,"mode: ");
+				fwritef(1,"%3d ",i+1);
 				fwritef(1,list[i].mode&EV_RDONLY?"-":"w");
 				fwritef(1,list[i].mode&EV_GLOBAL?"x":"-");
+				fwritef(1," ");
+				fwritef(1,"%s=",list[i].name);
+				fwritef(1,"%s",list[i].value);
 				fwritef(1,"\n");
 				i++; 
 			}
@@ -305,15 +306,13 @@ runit:
 		if (debug_) writef("[%08x] WAIT %s %08x\n", env->env_id, argv[0], r);
 		if(!hang)
 			wait(r);
-		else
-		{
+		else{
 			writef("\x1b[33m[%08x]\x1b[0m\t", r);
 			for (i = 0; i < argc; ++i)
 				writef("%s ", argv[i]);
 			writef("\n");
 			int pid = fork();
-			if (pid == 0)
-			{
+			if (pid == 0){
 				wait(r);
 				writef("\x1b[33m[%08x]\x1b[35m\tDone\x1b[0m\n", r);
 				exit();
@@ -326,16 +325,12 @@ runit:
 	}
 	exit();
 }
-static int _hist = 0;
-
-static void save_cmd(char *buf)
-{
-	if (!*buf)
-		return;
-	_hist = 0;
-	int his = open(".history", O_APPEND | O_WRONLY | O_CREAT);
-	if (his < 0)
-	{
+static int newcmd = 0;
+static void save_cmd(char *buf){
+	if (!*buf)return;
+	newcmd=0;
+	int his=open(".history",O_APPEND|O_RDWR|O_CREAT);
+	if (his<0){
 		fwritef(1, "cannot open history\n");
 		return;
 	}
@@ -343,68 +338,53 @@ static void save_cmd(char *buf)
 	close(his);
 }
 
-static int hist(char *buf, int up)
-{
-	static int last = 0;
-	static char history_info[4 * 1024 * 1024];
-	if (!_hist)
-	{
+static int hist(char *buf, int up){
+	static int last=0;
+	static char history_info[4*1024*1024];
+	if(!newcmd){
 		struct Stat state;
-		if (stat(".history", &state) < 0)
-			return 0;
-		int his = open(".history", O_RDONLY);
-		if (his < 0)
-			return 0;
-		read(his, history_info, state.st_size);
-		history_info[state.st_size] = 0;
+		if(stat(".history",&state)<0)return 0;
+		int his=open(".history",O_RDONLY);
+		if(his<0)return 0;
+		read(his,history_info,state.st_size);
+		history_info[state.st_size]=0;
 		close(his);
 	}
-	int oi, i, j, ofst;
-	if (_hist <= 1 && !up)
+	int oi, i, j, offset;
+	if (newcmd <= 1 && !up)
 	{
-		_hist = 0;
-		last = _hist == 1 ? up : 0;
+		newcmd=0;
+		last=newcmd==1?up:0;
 		return 0;
 	}
-	if (!last)
-	{
-		ofst = _hist + (up ? 1 : -1);
+	if(!last){
+		offset=newcmd+(up?1:-1);
 	}
-	else
-	{
-		if (last > 0)
-		{
-			if (up)
+	else{
+		if(last>0){
+			if(up)
 				return 0;
 			else
-				ofst = _hist;
+				offset = newcmd;
 		}
-		else
-		{
-			if (!up)
+		else{
+			if(!up)
 				return 0;
 			else
-				ofst = _hist;
+				offset = newcmd;
 		}
 	}
-	// writef("hist : %d\tofst : %d\n", _hist, ofst);
-	for (j = 0; history_info[j] && ofst != 0; ++j)
-	{
-		if (history_info[j] == '\n')
-		{
-			ofst--;
+	for(j=0;history_info[j]&&offset!=0;++j){
+		if(history_info[j]=='\n'){
+			offset--;
 		}
 	}
-	if (ofst != 0)
-	{
-		last = up ? 1 : -1;
+	if(offset!=0){
+		last=up?1:-1;
 		return 0;
 	}
-
-	for (oi = i = 0; history_info[j]; ++j)
-	{
-		if (history_info[j] == '\n')
-		{
+	for (oi = i = 0; history_info[j]; ++j){
+		if (history_info[j] == '\n'){
 			oi = i;
 			while (history_info[i] != '\n')
 				++i;
@@ -426,9 +406,9 @@ static int hist(char *buf, int up)
 	if (!last)
 	{
 		if (up)
-			_hist++;
+			newcmd++;
 		else
-			_hist--;
+			newcmd--;
 	}
 	last = 0;
 	return ptr - buf;
@@ -496,11 +476,19 @@ void umain(int argc, char **argv){
 	int r, interactive, echocmds;
 	interactive = '?';
 	echocmds = 0;
-	writef("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
-	writef("::                                                         ::\n");
-	writef("::              Super Shell  V0.0.0_1                      ::\n");
-	writef("::                                                         ::\n");
-	writef(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+	// writef("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+	// writef("::                                                         ::\n");
+	// writef("::              Super Shell  V0.0.0_1                      ::\n");
+	// writef("::                                                         ::\n");
+	// writef(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+	writef("	[0;37m              [0;1;34m__[0;37m           [0;34m__[0;37m         ____[0m\n\
+	[0;37m  [0;1;34m______[0;34m___[0;37m  [0;34m/[0;37m [0;34m____[0;37m [0;34m____[0;37m__/ /_  ___  / / [0;1;30m/[0m\n\
+	[0;37m [0;34m/[0;37m [0;34m___/[0;37m [0;34m__[0;37m [0;34m\\/[0;37m [0;34m/[0;37m __ `/ ___/ __ \\/ [0;1;30m_[0;37m [0;1;30m\\/[0;37m [0;1;30m/[0;37m [0;1;30m/[0;37m [0m\n\
+	[0;34m/[0;37m [0;34m/__/[0;37m [0;34m/[0;37m_/ / / /_/ (__  [0;1;30m/[0;37m [0;1;30m/[0;37m [0;1;30m/[0;37m [0;1;30m/[0;37m  [0;1;30m__/[0;37m [0;1;30m/[0;37m [0;1;30m/[0;37m  [0m\n\
+	[0;37m\\___/\\____/_/\\__[0;1;30m,_/____/_/[0;37m [0;1;30m/_/\\_[0;1;34m__/_/_/[0;37m   [0m\n\
+	[0;37m                                          [0m");
+	
+	
 	ARGBEGIN{
 	case 'd':
 		debug_++;

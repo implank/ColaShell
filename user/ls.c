@@ -20,6 +20,7 @@ ls(char *path, char *prefix)
 		lsdir(path, prefix);
 	else
 		ls1(0, st.st_isdir, st.st_size, path);
+	fwritef(1,"\n");
 }
 
 void

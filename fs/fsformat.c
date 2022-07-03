@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <dirent.h>
 
 /* Prevent inc/types.h, included from inc/fs.h,
  * From attempting to redefine types defined in the host's inttypes.h. */
@@ -243,6 +244,36 @@ void write_file(struct File *dirf, const char *path) {
 //      We ASSUME that this funcion will never fail
 void write_directory(struct File *dirf, char *name) {
 	// Your code here
+	DIR *dir;
+	struct dirent *file_info;
+	struct File *newdir;
+	int dir_len;
+	char sub_dir[512];
+	if(strcmp(name, ".") == 0 || strcmp(name, "..")  == 0) return;
+	printf("\x1b[33m insuc \x1b[0m");
+	dir = opendir(name);
+	if (dir == NULL) return;
+	printf("\x1b[33m suc \x1b[0m");
+	dir_len = strlen(name);
+	if (name[dir_len - 1] == '/') name[dir_len - 1] = '\0';
+	while (file_info = readdir(dir)) {
+		switch (file_info->d_type) {
+			case DT_DIR:
+				if(strcmp(file_info->d_name, ".") != 0 && strcmp(file_info->d_name, "..") != 0) {
+					newdir = create_file(dirf);
+					strcpy(newdir->f_name, file_info->d_name);
+					newdir->f_size = 0;
+					newdir->f_type = FTYPE_DIR;
+					sprintf(sub_dir, "%s/%s", name, file_info->d_name);
+					write_directory(newdir, sub_dir);
+				}
+				break;
+			default:
+				sprintf(sub_dir, "%s/%s", name, file_info->d_name);
+				write_file(dirf, sub_dir);
+		}
+	}
+	closedir(dir);
 }
 int main(int argc, char **argv) {
 	int i;
@@ -259,8 +290,17 @@ int main(int argc, char **argv) {
 		}
 	}
 	else {
+		int mode=0;
 		for(i = 2; i < argc; ++i) {
-			write_file(&super.s_root, argv[i]);
+			// printf("\x1b[33m%s\x1b[0m\n",argv[i]);
+			if(strcmp(argv[i],"-r")==0){
+				mode=1;
+				continue;
+			}
+			if(mode==0)
+				write_file(&super.s_root, argv[i]);
+			else 
+				write_directory(&super.s_root, argv[i]);
 		}
 	}
 	flush_bitmap();
