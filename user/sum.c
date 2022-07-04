@@ -16,7 +16,7 @@ int get_num()
 void umain(int argc, char **argv)
 {
 	u_int max = get_num(); // positive number
-	max=1000000;
+	max=20000000;
 	int sum = 0;
 	for (; max > 0; max--)
 		sum += max;

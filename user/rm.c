@@ -9,7 +9,7 @@ void umain(int argc, char **argv){
 	struct Stat state;
 	for(i=1;i<argc;++i){
 		if(stat(argv[i],&state)<0){
-			fwritef(1, "cannot open file: %s\n",argv[i]);
+			fwritef(1,"cannot open file: %s\n",argv[i]);
 			continue;
 		}
 		if(state.st_isdir){

@@ -426,6 +426,8 @@ int sys_set_env_var(int sysno,u_int name,u_int value,u_int mode,u_int sh_id){
 	int idx=__find_env_var((char*)name,sh_id);
 	if(value==0){
 		if(idx<0)return -E_EV_NOT_FOUND;
+		if(idx>=0&&(env_var[idx].mode&EV_RDONLY))
+			return -E_EV_RDONLY;
 		env_var[idx].name[0]=0;
 	}
 	else {

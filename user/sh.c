@@ -110,8 +110,11 @@ int call_inner_instr(int argc,char **argv){
 		if(argc!=2)fwritef(1,"usage: unset [varname]\n");
 		else{
 			r=syscall_set_env_var(argv[1],0,0,sh_id);
-			if(r<0){
+			if(r==-E_EV_NOT_FOUND){
 				fwritef(1,"env var [%s] don't exist\n",argv[1]);
+			}
+			else if(r==-E_EV_RDONLY){
+				fwritef(1,"env var [%s] is readonly\n",argv[1]);
 			}
 		}
 		return 1;
@@ -272,7 +275,7 @@ again:
 				close(0);
 				if((r=opencons()) < 0)
 					user_panic("opencons: %e",r);
-			} while(r != 0);
+			}while(r!=0);
 			dup(0,1);
 			break;
 		}
@@ -298,7 +301,7 @@ runit:
 		//exit();
 	}
 	close_all();
-	if(r >= 0) {
+	if(r>=0) {
 		// writef("hang:%d\n",hang);
 		if(debug_) writef("[%08x] WAIT %s %08x\n",env->env_id,argv[0],r);
 		if(!hang)
@@ -476,6 +479,8 @@ void umain(int argc,char **argv){
 		readline(buf,sizeof buf);
 		if(!*buf)continue;
 		save_cmd(buf);
+		if(strcmp("quit",buf)==0)
+			exit(0);
 		if(buf[0]=='#')
 			continue;
 		if(echocmds)
